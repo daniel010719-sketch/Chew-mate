@@ -1,2432 +1,1532 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>꼭꼭 씹기 밥친구 (옴뇸뇸 메이트) - 점심/저녁 & 메뉴 추천</title>
-    <style>
-        /* =========================================================================
-         * 1. 디자인 토큰 (점심 모드 기본 & 저녁 모드 다크 앰버 테마)
-         * ========================================================================= */
-        :root {
-            --bg-base: #FDF8EE;
-            --bg-dot: #EFE0C4;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 224, 150, 0.35), transparent 65%);
-            --card-bg: #FFFFFF;
-            --card-soft: #FFFDF8;
-            --stage-top: #FFF9EB;
-            --stage-bottom: #FCEFD2;
-            --border-light: #EEDCC5;
-            --border-warm: #E6CCA5;
-            --primary: #FF7E5F;
-            --primary-hover: #FF6844;
-            --primary-shadow: #C85A32;
-            --primary-soft: #FFF0EB;
-            --secondary-bg: #FFF5E4;
-            --secondary-hover: #FFE8C8;
-            --secondary-shadow: #B89F80;
-            --secondary-text: #6B4423;
-            --accent-green: #52B788;
-            --accent-amber: #FFB703;
-            --text-main: #4A3728;
-            --text-title: #5C3D2E;
-            --text-muted: #8C6D58;
-            --ring-track: #F5E6D3;
-            --ring-bg: #FFFDF9;
-            --seg-bg: #F5EBE0;
-            --seg-active-bg: #FFFFFF;
-            --chew-duration: 0.36s;
-            --font-sans: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', system-ui, -apple-system, sans-serif;
-            --font-display: 'Pretendard', 'Jalnan', 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-        }
-
-        body.dinner-mode {
-            --bg-base: #131829;
-            --bg-dot: #232B45;
-            --bg-glow: radial-gradient(circle at 50% 8%, rgba(245, 158, 11, 0.16), transparent 60%);
-            --card-bg: #1E253B;
-            --card-soft: #252E48;
-            --stage-top: #1D253E;
-            --stage-bottom: #2B2A3E;
-            --border-light: #333E5E;
-            --border-warm: #4A4458;
-            --primary: #F59E0B;
-            --primary-hover: #D97706;
-            --primary-shadow: #92400E;
-            --primary-soft: rgba(245, 158, 11, 0.16);
-            --secondary-bg: #28324E;
-            --secondary-hover: #334063;
-            --secondary-shadow: #111625;
-            --secondary-text: #FDE68A;
-            --accent-green: #34D399;
-            --accent-amber: #FBBF24;
-            --text-main: #E2E8F0;
-            --text-title: #FEF3C7;
-            --text-muted: #94A3B8;
-            --ring-track: #2D3754;
-            --ring-bg: #181E30;
-            --seg-bg: #151B2C;
-            --seg-active-bg: #2C3654;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-base);
-            background-image: var(--bg-glow),
-                              radial-gradient(var(--bg-dot) 1.5px, transparent 1.5px),
-                              radial-gradient(var(--bg-dot) 1.5px, transparent 1.5px);
-            background-size: 100% 100%, 36px 36px, 36px 36px;
-            background-position: 0 0, 0 0, 18px 18px;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
-            transition: background-color 0.35s ease, color 0.35s ease;
-        }
-
-        .title-font {
-            font-family: var(--font-display);
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 960px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        /* =========================================================================
-         * 2. 상단 헤더 & 점심/저녁 모드 토글 스위치
-         * ========================================================================= */
-        .header-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-light);
-            border-radius: 24px;
-            padding: 12px 18px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-            transition: background-color 0.35s ease, border-color 0.35s ease;
-        }
-
-        .brand-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: var(--primary-soft);
-            border: 2px solid var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-
-        .brand-title {
-            font-size: 1.25rem;
-            color: var(--text-title);
-            line-height: 1.2;
-        }
-
-        .brand-sub {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .daypart-switch {
-            display: inline-flex;
-            align-items: center;
-            background: var(--seg-bg);
-            border: 1.5px solid var(--border-warm);
-            border-radius: 999px;
-            padding: 3px;
-            gap: 3px;
-        }
-
-        .daypart-btn {
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 0.78rem;
-            font-weight: 800;
-            padding: 5px 11px;
-            border-radius: 999px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .daypart-btn.active.lunch {
-            background: #FFB703;
-            color: #4A3219;
-            box-shadow: 0 2px 6px rgba(255, 183, 3, 0.35);
-        }
-
-        .daypart-btn.active.dinner {
-            background: #312E81;
-            color: #FDE68A;
-            box-shadow: 0 2px 8px rgba(49, 46, 129, 0.45);
-        }
-
-        .pill-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 7px 12px;
-            border-radius: 14px;
-            background: var(--secondary-bg);
-            border: 1.5px solid var(--border-warm);
-            color: var(--secondary-text);
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.15s ease;
-        }
-
-        .pill-btn:hover {
-            background: var(--secondary-hover);
-        }
-
-        .pill-btn:active {
-            transform: scale(0.96);
-        }
-
-        .pill-btn.muted {
-            opacity: 0.6;
-        }
-
-        .pill-btn.wake-active {
-            border-color: var(--accent-green);
-            box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
-        }
-
-        /* =========================================================================
-         * 3. 메인 스테이지 그리드 (왼쪽 밥친구 식탁 + 오른쪽 카운터/조작부)
-         * ========================================================================= */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-
-        @media (min-width: 768px) {
-            .main-grid {
-                grid-template-columns: 7fr 5fr;
-            }
-        }
-
-        /* 왼쪽 캐릭터 식탁 카드 */
-        .stage-card {
-            background: linear-gradient(180deg, var(--stage-top) 0%, var(--stage-bottom) 100%);
-            border: 2px solid var(--border-warm);
-            border-radius: 26px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.09);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 365px;
-            transition: background 0.35s ease, border-color 0.35s ease;
-        }
-
-        .stage-top-bar {
-            padding: 14px 16px 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            z-index: 10;
-        }
-
-        .state-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 6px 14px;
-            border-radius: 999px;
-            background: var(--card-bg);
-            border: 2px solid var(--border-warm);
-            font-size: 0.84rem;
-            font-weight: 800;
-            color: var(--text-title);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #FBBF24;
-        }
-
-        .status-dot.chewing {
-            background: var(--primary);
-            animation: dotPulse 0.8s infinite alternate;
-        }
-
-        .status-dot.swallow {
-            background: #10B981;
-        }
-
-        .status-dot.rest {
-            background: #38BDF8;
-        }
-
-        .status-dot.paused {
-            background: #A8A29E;
-        }
-
-        @keyframes dotPulse {
-            from { transform: scale(0.85); opacity: 0.7; }
-            to { transform: scale(1.25); opacity: 1; }
-        }
-
-        .side-dish-btn {
-            background: var(--card-bg);
-            border: 1.5px solid var(--border-warm);
-            border-radius: 12px;
-            padding: 5px 10px;
-            font-size: 0.76rem;
-            font-weight: 700;
-            color: var(--text-title);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: background 0.15s;
-        }
-
-        .side-dish-btn:hover {
-            background: var(--secondary-hover);
-        }
-
-        /* 말풍선 */
-        .speech-wrap {
-            padding: 4px 16px 0;
-            display: flex;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .speech-bubble {
-            background: var(--card-bg);
-            border: 2px solid var(--border-warm);
-            border-radius: 18px;
-            padding: 10px 18px;
-            max-width: 94%;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .speech-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            width: 13px;
-            height: 13px;
-            background: var(--card-bg);
-            border-right: 2px solid var(--border-warm);
-            border-bottom: 2px solid var(--border-warm);
-            transform: translateX(-50%) rotate(45deg);
-        }
-
-        .speech-text {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--text-title);
-            line-height: 1.4;
-            word-break: keep-all;
-        }
-
-        /* 밥친구 SVG 무대 영역 */
-        .character-canvas-wrap {
-            position: relative;
-            width: 100%;
-            flex: 1;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-top: 6px;
-        }
-
-        .character-svg {
-            width: 100%;
-            max-width: 420px;
-            height: auto;
-            display: block;
-        }
-
-        #characterHeadGroup {
-            transform-origin: 200px 135px;
-            transition: transform 0.16s ease-out;
-        }
-
-        .chewing-bounce {
-            animation: headChew var(--chew-duration) ease-in-out infinite alternate;
-        }
-
-        @keyframes headChew {
-            0% { transform: translateY(0px) rotate(-1deg); }
-            100% { transform: translateY(-4px) rotate(1deg); }
-        }
-
-        .cheek-puff {
-            animation: cheekPuff var(--chew-duration) ease-in-out infinite alternate;
-        }
-
-        @keyframes cheekPuff {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.22); }
-        }
-
-        .steam-wave {
-            animation: steamFloat 2.4s ease-in-out infinite;
-        }
-
-        @keyframes steamFloat {
-            0%, 100% { transform: translateY(0px); opacity: 0.4; }
-            50% { transform: translateY(-6px); opacity: 0.85; }
-        }
-
-        .stage-footer-tip {
-            background: var(--secondary-bg);
-            border-top: 1px solid var(--border-warm);
-            padding: 8px 12px;
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* =========================================================================
-         * 4. 오른쪽 카운터 및 컨트롤 패널
-         * ========================================================================= */
-        .counter-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-light);
-            border-radius: 26px;
-            padding: 18px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            transition: background-color 0.35s ease, border-color 0.35s ease;
-        }
-
-        .counter-header {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 10px;
-            border-bottom: 1.5px solid var(--border-light);
-        }
-
-        .counter-title {
-            font-size: 0.78rem;
-            font-weight: 800;
-            color: var(--text-muted);
-        }
-
-        .speed-tag {
-            font-size: 0.75rem;
-            font-weight: 800;
-            padding: 3px 10px;
-            border-radius: 999px;
-            background: var(--primary-soft);
-            color: var(--primary);
-        }
-
-        .ring-wrap {
-            position: relative;
-            width: 196px;
-            height: 196px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ring-wrap svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-
-        .progress-ring-circle {
-            transition: stroke-dashoffset 0.25s ease-out, stroke 0.25s ease;
-        }
-
-        .ring-center-text {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .ring-mini-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-
-        .ring-numbers {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .ring-current {
-            font-size: 3.3rem;
-            line-height: 1;
-            color: var(--text-title);
-        }
-
-        .ring-target {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-        }
-
-        .controls-wrap {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 9px;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 14px 16px;
-            border: none;
-            border-radius: 18px;
-            background: var(--primary);
-            color: #FFFFFF;
-            font-size: 1.05rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 0 var(--primary-shadow);
-            transition: transform 0.1s ease, background-color 0.15s ease;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-hover);
-        }
-
-        .btn-primary:active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 var(--primary-shadow);
-        }
-
-        .sub-controls-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .btn-secondary {
-            padding: 10px 8px;
-            border-radius: 14px;
-            background: var(--secondary-bg);
-            border: 1.5px solid var(--border-warm);
-            color: var(--secondary-text);
-            font-size: 0.82rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            box-shadow: 0 3px 0 var(--secondary-shadow);
-            transition: transform 0.1s ease, background-color 0.15s ease;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--secondary-hover);
-        }
-
-        .btn-secondary:active:not(:disabled) {
-            transform: translateY(2px);
-            box-shadow: 0 1px 0 var(--secondary-shadow);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        /* =========================================================================
-         * 5. 오늘 뭐 먹지? 식사 메뉴 추천기 카드
-         * ========================================================================= */
-        .menu-recommender-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-light);
-            border-radius: 24px;
-            padding: 16px 18px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: background-color 0.35s ease, border-color 0.35s ease;
-        }
-
-        .menu-rec-top {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .menu-rec-heading {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .menu-rec-title {
-            font-size: 1.02rem;
-            color: var(--text-title);
-        }
-
-        .daypart-menu-pill {
-            font-size: 0.72rem;
-            font-weight: 800;
-            padding: 3px 9px;
-            border-radius: 999px;
-            background: var(--primary-soft);
-            color: var(--primary);
-        }
-
-        .shuffle-btn {
-            padding: 9px 15px;
-            border: none;
-            border-radius: 14px;
-            background: var(--primary);
-            color: #FFFFFF;
-            font-size: 0.85rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 3px 0 var(--primary-shadow);
-            transition: transform 0.1s ease, background-color 0.15s ease;
-        }
-
-        .shuffle-btn:hover {
-            background: var(--primary-hover);
-        }
-
-        .shuffle-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 1px 0 var(--primary-shadow);
-        }
-
-        .shuffle-btn.spinning .dice-icon {
-            display: inline-block;
-            animation: diceSpin 0.45s linear infinite;
-        }
-
-        @keyframes diceSpin {
-            0% { transform: rotate(0deg) scale(1.1); }
-            100% { transform: rotate(360deg) scale(1.1); }
-        }
-
-        .menu-result-box {
-            background: var(--card-soft);
-            border: 1.5px solid var(--border-warm);
-            border-radius: 18px;
-            padding: 13px 16px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            transition: transform 0.18s ease, border-color 0.2s ease;
-        }
-
-        .menu-result-box.pop {
-            transform: scale(1.015);
-            border-color: var(--primary);
-        }
-
-        .menu-info-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            min-width: 210px;
-        }
-
-        .menu-emoji-badge {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: var(--primary-soft);
-            border: 1.5px solid var(--border-warm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            flex-shrink: 0;
-        }
-
-        .menu-name-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            flex-wrap: wrap;
-        }
-
-        .menu-name {
-            font-size: 1.05rem;
-            color: var(--text-title);
-        }
-
-        .menu-chew-badge {
-            font-size: 0.74rem;
-            font-weight: 800;
-            padding: 2px 9px;
-            border-radius: 999px;
-            background: var(--accent-green);
-            color: #112A1E;
-        }
-
-        .menu-tip-text {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-            line-height: 1.35;
-        }
-
-        .menu-chips-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-            scrollbar-width: none;
-        }
-
-        .menu-chips-wrap::-webkit-scrollbar {
-            display: none;
-        }
-
-        .menu-chip {
-            flex-shrink: 0;
-            padding: 5px 11px;
-            border-radius: 999px;
-            border: 1.5px solid var(--border-light);
-            background: var(--card-soft);
-            color: var(--text-muted);
-            font-size: 0.76rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .menu-chip:hover {
-            border-color: var(--primary);
-            color: var(--text-title);
-        }
-
-        .menu-chip.active {
-            background: var(--primary-soft);
-            border-color: var(--primary);
-            color: var(--primary);
-            font-weight: 800;
-        }
-
-        /* =========================================================================
-         * 6. 맞춤 설정 패널
-         * ========================================================================= */
-        .settings-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-light);
-            border-radius: 24px;
-            padding: 16px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            transition: background-color 0.35s ease, border-color 0.35s ease;
-        }
-
-        @media (min-width: 768px) {
-            .settings-card {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        .setting-box {
-            background: var(--card-soft);
-            border: 1.5px solid var(--border-light);
-            border-radius: 18px;
-            padding: 13px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .setting-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .setting-label {
-            font-size: 0.92rem;
-            font-weight: 800;
-            color: var(--text-title);
-        }
-
-        .setting-value {
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .setting-desc {
-            font-size: 0.73rem;
-            color: var(--text-muted);
-            line-height: 1.35;
-        }
-
-        .segmented-control {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            background: var(--seg-bg);
-            padding: 4px;
-            border-radius: 12px;
-        }
-
-        .seg-btn {
-            padding: 7px 6px;
-            border: none;
-            border-radius: 9px;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 0.78rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .seg-btn.active {
-            background: var(--seg-active-bg);
-            color: var(--primary);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-        }
-
-        .stepper-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .step-mini-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 7px;
-            border: none;
-            background: var(--seg-bg);
-            color: var(--text-title);
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .step-mini-btn:hover {
-            background: var(--secondary-hover);
-        }
-
-        .preset-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-        }
-
-        .preset-btn {
-            padding: 7px 4px;
-            border-radius: 11px;
-            border: 1.5px solid var(--border-light);
-            background: var(--card-bg);
-            color: var(--text-muted);
-            font-size: 0.76rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .preset-btn.active {
-            border: 2px solid var(--primary);
-            background: var(--primary-soft);
-            color: var(--primary);
-        }
-
-        .slider-container {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding: 4px 0;
-        }
-
-        input[type="range"].speed-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            border-radius: 999px;
-            background: var(--seg-bg);
-            outline: none;
-            cursor: pointer;
-        }
-
-        input[type="range"].speed-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--primary);
-            border: 3px solid #FFFFFF;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-            cursor: pointer;
-        }
-
-        .slider-ticks {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            font-weight: 700;
-        }
-
-        /* =========================================================================
-         * 7. 하단 식사 기록 대시보드 & 가이드 모달
-         * ========================================================================= */
-        .stats-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-warm);
-            border-radius: 24px;
-            padding: 14px 16px;
-            transition: background-color 0.35s ease, border-color 0.35s ease;
-        }
-
-        .stats-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .stats-title {
-            font-size: 0.95rem;
-            color: var(--text-title);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .reset-link {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            text-align: center;
-        }
-
-        .stat-item {
-            background: var(--card-soft);
-            border: 1.5px solid var(--border-light);
-            border-radius: 16px;
-            padding: 10px 6px;
-        }
-
-        .stat-label {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .stat-num {
-            font-size: 1.45rem;
-            color: var(--primary);
-        }
-
-        .stat-unit {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-left: 2px;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 20, 35, 0.6);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            z-index: 50;
-        }
-
-        .modal-backdrop.open {
-            display: flex;
-        }
-
-        .modal-box {
-            background: var(--card-bg);
-            border: 3px solid var(--border-warm);
-            border-radius: 26px;
-            max-width: 420px;
-            width: 100%;
-            padding: 22px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
-        }
-
-        .modal-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-
-        .modal-close {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: none;
-            background: var(--seg-bg);
-            color: var(--text-title);
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .tip-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            font-size: 0.86rem;
-            line-height: 1.45;
-            color: var(--text-main);
-        }
-
-        .tip-list li {
-            background: var(--card-soft);
-            border: 1.5px solid var(--border-light);
-            border-radius: 14px;
-            padding: 11px 13px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Chew-mate 키즈 | 우리 아이 꼭꼭 씹기 & 편식 극복 밥친구</title>
+  <meta name="description" content="동물 밥친구와 함께 꼭꼭 씹고 편식 재료도 용감하게 도전하는 아동 식습관 교정 웹앱. 칭찬 스티커판과 부모님 전용 이유식·유아반찬 찾기까지!" />
+  <style>
+    :root {
+      --bg-color: #FFF8EB;
+      --card-bg: #FFFFFF;
+      --text-main: #3A2E25;
+      --text-sub: #7D6E63;
+      --accent: #FF8533;
+      --accent-soft: #FFF0E0;
+      --green: #4CAF50;
+      --green-soft: #E8F5E9;
+      --gold: #FFB300;
+      --gold-soft: #FFF8E1;
+      --border-color: #F2E4D5;
+      --badge-bg: #F7EFE6;
+      --shadow: 0 8px 22px rgba(58, 46, 37, 0.08);
+      --danger: #E55353;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 14px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 40px;
+    }
+
+    /* 헤더 */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 4px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .brand h1 {
+      font-size: 1.22rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .brand span {
+      font-size: 0.74rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .icon-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* 카드 공통 */
+    .card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    /* 동물 친구 & 연령 프리셋 상단 바 */
+    .selector-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .char-tabs {
+      display: flex;
+      gap: 5px;
+    }
+
+    .char-tab {
+      background: var(--badge-bg);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      padding: 5px 9px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: var(--text-sub);
+    }
+
+    .char-tab.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* 연령 프리셋 */
+    .preset-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .preset-btn {
+      background: var(--badge-bg);
+      border: 1.5px solid transparent;
+      border-radius: 14px;
+      padding: 8px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn strong {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-main);
+    }
+
+    .preset-btn span {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .preset-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .preset-btn.active strong {
+      color: var(--accent);
+    }
+
+    /* 캐릭터 스테이지 */
+    .character-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transition: background-color 0.3s;
+    }
+
+    .character-stage.brave-mode {
+      background: linear-gradient(180deg, #FFFDF5 0%, #FFF3D1 100%);
+      border-color: var(--gold);
+    }
+
+    .status-bubble {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 0.92rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .brave-mode .status-bubble {
+      background: var(--gold);
+      color: #fff;
+    }
+
+    #mate-svg {
+      width: 215px;
+      height: 175px;
+      overflow: visible;
+    }
+
+    .chewing-head {
+      transform-origin: 105px 95px;
+    }
+
+    .is-chewing .chewing-head {
+      animation: headChew var(--chew-speed, 0.85s) infinite ease-in-out;
+    }
+
+    .is-chewing .cheek-left,
+    .is-chewing .cheek-right {
+      animation: cheekPuff var(--chew-speed, 0.85s) infinite ease-in-out;
+    }
+
+    .is-chewing .mouth-chew {
+      animation: mouthMove var(--chew-speed, 0.85s) infinite ease-in-out;
+    }
+
+    @keyframes headChew {
+      0%, 100% { transform: translateY(0) scale(1, 1); }
+      50% { transform: translateY(5px) scale(1.04, 0.95); }
+    }
+
+    @keyframes cheekPuff {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.28); }
+    }
+
+    @keyframes mouthMove {
+      0%, 100% { transform: scaleY(0.55); }
+      50% { transform: scaleY(1.3); }
+    }
+
+    .chew-counter-display {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .chew-counter-display small {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+
+    .progress-track {
+      width: 86%;
+      height: 12px;
+      background: var(--badge-bg);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.2s ease, background-color 0.2s;
+    }
+
+    .brave-mode .progress-fill {
+      background: var(--gold);
+    }
+
+    /* 편식 미션 바 */
+    .mission-box {
+      width: 100%;
+      background: var(--green-soft);
+      border: 1.5px solid #C8E6C9;
+      border-radius: 16px;
+      padding: 10px 12px;
+      margin-top: 12px;
+    }
+
+    .mission-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #2E7D32;
+      margin-bottom: 7px;
+    }
+
+    .veg-chips {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .veg-chip {
+      flex: 1;
+      background: #FFFFFF;
+      border: 1.5px solid #C8E6C9;
+      border-radius: 12px;
+      padding: 6px 2px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .veg-chip.active {
+      background: var(--green);
+      color: #FFFFFF;
+      border-color: var(--green);
+    }
+
+    /* 액션 버튼 3종 */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .btn-auto {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 13px 10px;
+      border-radius: 15px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-bite {
+      background: var(--badge-bg);
+      color: var(--text-main);
+      border: none;
+      padding: 13px 10px;
+      border-radius: 15px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-brave {
+      grid-column: span 2;
+      background: linear-gradient(135deg, #FFB300 0%, #FF8F00 100%);
+      color: #fff;
+      border: none;
+      padding: 13px;
+      border-radius: 15px;
+      font-size: 0.96rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 160, 0, 0.3);
+    }
+
+    .btn-auto:active, .btn-bite:active, .btn-brave:active {
+      transform: scale(0.97);
+    }
+
+    /* 칭찬 스티커판 */
+    .sticker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .sticker-header h2 {
+      font-size: 0.98rem;
+      font-weight: 900;
+    }
+
+    .sticker-count {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .sticker-board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .sticker-slot {
+      aspect-ratio: 1 / 1;
+      background: var(--badge-bg);
+      border: 2px dashed #DECDBE;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.55rem;
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .sticker-slot.filled {
+      background: var(--gold-soft);
+      border: 2px solid var(--gold);
+      transform: scale(1.03);
+    }
+
+    .sticker-sub {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 0.74rem;
+      color: var(--text-sub);
+    }
+
+    .reset-sticker-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      text-decoration: underline;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    /* 어린이 반찬 룰렛 */
+    .slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .slot-header h2 {
+      font-size: 0.98rem;
+      font-weight: 900;
+    }
+
+    .manage-btn {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: none;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .slot-box {
+      background: var(--badge-bg);
+      border-radius: 16px;
+      padding: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slot-result {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .slot-category-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .slot-menu-name {
+      font-size: 1.12rem;
+      font-weight: 900;
+    }
+
+    .slot-menu-meta {
+      font-size: 0.76rem;
+      color: var(--text-sub);
+    }
+
+    .spin-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 11px 15px;
+      border-radius: 13px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* 부모님 전용 보호 영역 (Parental Gate) */
+    .parent-card {
+      background: #F4F6F9;
+      border: 1.5px solid #DCE2EC;
+    }
+
+    .parent-gate-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .parent-gate-info strong {
+      display: block;
+      font-size: 0.9rem;
+      color: #2B3445;
+    }
+
+    .parent-gate-info span {
+      display: block;
+      font-size: 0.74rem;
+      color: #647084;
+      margin-top: 2px;
+    }
+
+    .unlock-btn {
+      background: #2B3445;
+      color: #fff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .parent-content {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed #CBD5E1;
+    }
+
+    .parent-content.open {
+      display: flex;
+    }
+
+    .parent-section-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #1E293B;
+      margin-bottom: 6px;
+    }
+
+    /* 위치 기반 이유식 매장 찾기 */
+    .local-finder-box {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .local-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .map-btn {
+      background: #03C75A;
+      color: #fff;
+      border: none;
+      padding: 10px 8px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .map-btn.kakao {
+      background: #FEE500;
+      color: #191919;
+    }
+
+    .location-status {
+      font-size: 0.73rem;
+      color: #647084;
+    }
+
+    /* 유아 간식 · 이유식 제휴 추천 카드 */
+    .promo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .promo-item {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .promo-text strong {
+      display: block;
+      font-size: 0.84rem;
+      color: #1E293B;
+    }
+
+    .promo-text span {
+      display: block;
+      font-size: 0.73rem;
+      color: #647084;
+      margin-top: 2px;
+    }
+
+    .promo-tag {
+      background: #FFF0E0;
+      color: #FF8533;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 5px 9px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .ad-disclosure {
+      font-size: 0.68rem;
+      color: #94A3B8;
+      text-align: center;
+    }
+
+    /* 모달 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 450px;
+      max-height: 82vh;
+      border-radius: 24px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-modal {
+      background: var(--badge-bg);
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .form-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--badge-bg);
+      padding: 12px;
+      border-radius: 16px;
+    }
+
+    .form-grid input, .form-grid select {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .custom-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .custom-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--badge-bg);
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 0.84rem;
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <div class="app-container">
+    <!-- 헤더 -->
+    <header>
+      <div class="brand">
+        <h1>🍚 Chew-mate</h1>
+        <span>키즈 밥친구</span>
+      </div>
+      <div class="header-actions">
+        <button id="voice-toggle" class="icon-btn active" title="음성 칭찬 켜기/끄기">🗣️ 음성칭찬</button>
+        <button id="wake-toggle" class="icon-btn" title="식사 중 화면 꺼짐 방지">📱 화면유지</button>
+      </div>
+    </header>
 
-    <div class="container">
-        <!-- 상단 헤더 -->
-        <header class="header-card">
-            <div class="brand-wrap">
-                <div id="brandIcon" class="brand-icon" aria-hidden="true">☀️</div>
-                <div>
-                    <h1 class="brand-title title-font">꼭꼭 씹기 밥친구</h1>
-                    <p id="brandSubtitle" class="brand-sub">활기찬 점심 식사! 소화 잘 되는 20번 씹기 루틴</p>
-                </div>
-            </div>
-
-            <div class="header-actions">
-                <!-- 점심 / 저녁 모드 전환 토글 -->
-                <div class="daypart-switch" role="group" aria-label="점심 및 저녁 모드 선택">
-                    <button id="lunchModeBtn" class="daypart-btn lunch active" onclick="setDaypartMode('lunch', true)">
-                        <span>☀️</span>
-                        <span>점심 모드</span>
-                    </button>
-                    <button id="dinnerModeBtn" class="daypart-btn dinner" onclick="setDaypartMode('dinner', true)">
-                        <span>🌙</span>
-                        <span>저녁 모드</span>
-                    </button>
-                </div>
-
-                <button id="wakeLockBtn" class="pill-btn" onclick="toggleWakeLock()" title="식사 중 화면 꺼짐 방지">
-                    <span id="wakeIcon">📱</span>
-                    <span id="wakeText">화면 유지</span>
-                </button>
-
-                <button id="soundToggleBtn" class="pill-btn" onclick="toggleSound()" title="효과음 켜기/끄기">
-                    <span id="soundIcon">🔊</span>
-                    <span id="soundText">효과음</span>
-                </button>
-
-                <button class="pill-btn" onclick="openTipModal()" title="건강하게 씹기 가이드">
-                    <span>💡</span>
-                    <span>팁</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- 메인 식사 스테이지 & 카운터 그리드 -->
-        <main class="main-grid">
-            <!-- 왼쪽: 귀여운 밥친구 식탁 카드 -->
-            <section class="stage-card" id="floatingLayer" aria-label="밥친구 애니메이션 화면">
-                <div class="stage-top-bar">
-                    <div class="state-badge">
-                        <span id="statusDot" class="status-dot"></span>
-                        <span id="statusBadgeText">식사 준비 완료</span>
-                    </div>
-
-                    <button class="side-dish-btn" onclick="cycleSideDish()" title="반찬 바꾸기">
-                        <span>🥢</span>
-                        <span id="sideDishLabel">🥚 계란말이</span>
-                    </button>
-                </div>
-
-                <div class="speech-wrap">
-                    <div class="speech-bubble">
-                        <p id="speechText" class="speech-text">
-                            "혼자 먹어도 든든하게! 시작 버튼을 누르면 같이 한 입 먹고 20번 꼭꼭 씹어요 🍚"
-                        </p>
-                    </div>
-                </div>
-
-                <!-- 밥친구 SVG 일러스트레이션 -->
-                <div class="character-canvas-wrap">
-                    <svg class="character-svg" viewBox="0 0 400 265" role="img" aria-label="밥을 꼭꼭 씹어 먹는 귀여운 밥친구 캐릭터">
-                        <!-- 아늑한 창문 장식 (점심 햇살 / 저녁 밤하늘 자동 전환) -->
-                        <g id="windowSceneGroup">
-                            <rect id="windowSky" x="35" y="15" width="66" height="55" rx="8" fill="#E0F2FE" stroke="#E5C59E" stroke-width="3"/>
-                            <!-- 점심 해 -->
-                            <g id="windowSun">
-                                <circle cx="53" cy="31" r="8" fill="#FBBF24"/>
-                                <circle cx="83" cy="27" r="5" fill="#FFFFFF" opacity="0.85"/>
-                                <circle cx="89" cy="29" r="4" fill="#FFFFFF" opacity="0.85"/>
-                            </g>
-                            <!-- 저녁 달과 별 -->
-                            <g id="windowMoon" opacity="0">
-                                <path d="M55,23 A8,8 0 1,0 63,35 A6,6 0 1,1 55,23 Z" fill="#FDE68A"/>
-                                <circle cx="82" cy="26" r="1.6" fill="#FEF3C7"/>
-                                <circle cx="89" cy="34" r="1.3" fill="#FEF3C7"/>
-                                <circle cx="76" cy="36" r="1.2" fill="#FEF3C7"/>
-                            </g>
-                            <line x1="68" y1="15" x2="68" y2="70" stroke="#E5C59E" stroke-width="2" opacity="0.8"/>
-                            <line x1="35" y1="42" x2="101" y2="42" stroke="#E5C59E" stroke-width="2" opacity="0.8"/>
-                        </g>
-
-                        <!-- 저녁 모드 전용 따뜻한 펜던트 조명 빛 -->
-                        <g id="dinnerLampGlow" opacity="0">
-                            <line x1="330" y1="0" x2="330" y2="24" stroke="#94A3B8" stroke-width="2.5"/>
-                            <path d="M312,38 Q330,18 348,38 Z" fill="#F59E0B" stroke="#5C3D2E" stroke-width="2.5"/>
-                            <circle cx="330" cy="40" r="5" fill="#FEF3C7"/>
-                            <polygon points="314,40 346,40 375,130 285,130" fill="#FDE68A" opacity="0.12"/>
-                        </g>
-
-                        <!-- 밥친구 몸통 (귀여운 앞치마 티셔츠) -->
-                        <path d="M126,225 C126,178 158,162 200,162 C242,162 274,178 274,225 Z" fill="#FF9E7D" stroke="#5C3D2E" stroke-width="3.5"/>
-                        <path d="M168,168 L168,220 L232,220 L232,168 Q200,182 168,168 Z" fill="#FFFDF8" stroke="#5C3D2E" stroke-width="3"/>
-
-                        <!-- 밥친구 머리 & 얼굴 그룹 -->
-                        <g id="characterHeadGroup">
-                            <!-- 귀 -->
-                            <circle cx="132" cy="112" r="14" fill="#FFE0C8" stroke="#5C3D2E" stroke-width="3.2"/>
-                            <circle cx="268" cy="112" r="14" fill="#FFE0C8" stroke="#5C3D2E" stroke-width="3.2"/>
-
-                            <!-- 얼굴 윤곽 -->
-                            <rect x="136" y="46" width="128" height="122" rx="58" fill="#FFE8D6" stroke="#5C3D2E" stroke-width="3.5"/>
-
-                            <!-- 앞머리 헤어스타일 -->
-                            <path d="M134,98 C132,52 162,32 200,32 C238,32 268,52 266,98 C256,76 242,72 228,82 C216,66 196,66 182,82 C166,70 148,76 134,98 Z" fill="#5C3D2E" stroke="#422B20" stroke-width="3" stroke-linejoin="round"/>
-                            <!-- 귀여운 삐죽 머리 -->
-                            <path d="M196,33 Q202,15 212,24 Q205,28 204,34 Z" fill="#5C3D2E"/>
-
-                            <!-- 눈썹 -->
-                            <path d="M163,88 Q174,83 183,88" fill="none" stroke="#5C3D2E" stroke-width="2.8" stroke-linecap="round"/>
-                            <path d="M217,88 Q226,83 237,88" fill="none" stroke="#5C3D2E" stroke-width="2.8" stroke-linecap="round"/>
-
-                            <!-- 눈 -->
-                            <g id="eyesNormal">
-                                <circle cx="174" cy="103" r="6.5" fill="#422B20"/>
-                                <circle cx="172" cy="101" r="2.2" fill="#FFFFFF"/>
-                                <circle cx="226" cy="103" r="6.5" fill="#422B20"/>
-                                <circle cx="224" cy="101" r="2.2" fill="#FFFFFF"/>
-                            </g>
-
-                            <!-- 빵빵해지는 양볼 -->
-                            <circle id="leftCheek" cx="157" cy="123" r="13" fill="#FF9B85" opacity="0.55" style="transform-origin: 157px 123px; transition: r 0.16s ease;"/>
-                            <circle id="rightCheek" cx="243" cy="123" r="13" fill="#FF9B85" opacity="0.55" style="transform-origin: 243px 123px; transition: r 0.16s ease;"/>
-
-                            <!-- 입 표정 4종 (대기 / 아~ 한입 / 오물오물 씹기 / 꿀꺽 행복미소) -->
-                            <!-- 1. 대기 미소 -->
-                            <path id="mouthIdle" d="M188,128 Q200,138 212,128" fill="none" stroke="#5C3D2E" stroke-width="3.2" stroke-linecap="round" opacity="1"/>
-
-                            <!-- 2. 한 입 크게 아~ -->
-                            <g id="mouthOpen" opacity="0">
-                                <ellipse cx="200" cy="131" rx="15" ry="13" fill="#D94E4E" stroke="#5C3D2E" stroke-width="3"/>
-                                <path d="M191,137 Q200,131 209,137" fill="#FF9E9E"/>
-                            </g>
-
-                            <!-- 3. 오물오물 씹기 -->
-                            <g id="mouthChew" opacity="0">
-                                <path d="M184,129 Q192,124 200,129 Q208,134 216,129" fill="none" stroke="#5C3D2E" stroke-width="3.4" stroke-linecap="round"/>
-                                <path d="M194,135 Q200,138 206,135" fill="none" stroke="#C87D65" stroke-width="2.2" stroke-linecap="round"/>
-                            </g>
-
-                            <!-- 4. 꿀꺽~ 삼키고 행복한 표정 -->
-                            <g id="mouthHappy" opacity="0">
-                                <path d="M185,125 Q200,144 215,125 Z" fill="#FF7E67" stroke="#5C3D2E" stroke-width="3" stroke-linejoin="round"/>
-                            </g>
-                        </g>
-
-                        <!-- 식탁 나무 상판 -->
-                        <rect x="18" y="216" width="364" height="44" rx="14" fill="#DEB887" stroke="#5C3D2E" stroke-width="3.5"/>
-                        <line x1="32" y1="224" x2="368" y2="224" stroke="#F3D5B5" stroke-width="3" stroke-linecap="round"/>
-
-                        <!-- 고봉밥 그릇 & 김 모락모락 -->
-                        <g transform="translate(88, 175)">
-                            <path class="steam-wave" d="M22,-10 Q17,-20 22,-30" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/>
-                            <path class="steam-wave" d="M36,-14 Q41,-24 36,-34" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" style="animation-delay: 0.7s;"/>
-                            <!-- 밥 산 -->
-                            <path d="M8,16 Q29,-12 50,16 Z" fill="#FFFFFF" stroke="#5C3D2E" stroke-width="3" stroke-linejoin="round"/>
-                            <!-- 밥공기 -->
-                            <path d="M4,16 L54,16 C52,36 44,43 29,43 C14,43 6,36 4,16 Z" fill="#FFFDF8" stroke="#5C3D2E" stroke-width="3.2" stroke-linejoin="round"/>
-                            <path d="M7,23 L51,23" stroke="#FF7E5F" stroke-width="3"/>
-                        </g>
-
-                        <!-- 따뜻한 국그릇 -->
-                        <g transform="translate(262, 180)">
-                            <ellipse cx="28" cy="14" rx="26" ry="7" fill="#E07A5F" stroke="#5C3D2E" stroke-width="2.8"/>
-                            <path d="M2,14 L54,14 C52,32 43,39 28,39 C13,39 4,32 2,14 Z" fill="#5C3D2E" stroke="#3D261C" stroke-width="3"/>
-                            <circle cx="22" cy="14" r="3" fill="#52B788"/>
-                            <circle cx="33" cy="15" r="2.5" fill="#FBBF24"/>
-                        </g>
-
-                        <!-- 고봉밥/메뉴 숟가락 애니메이션 (선택한 메뉴 타입에 따라 내용물 변경) -->
-                        <g id="spoonFeedingGroup" opacity="0" style="transform-origin: 200px 132px;">
-                            <path d="M210,132 L278,162" stroke="#D4A373" stroke-width="9" stroke-linecap="round"/>
-                            <ellipse cx="202" cy="130" rx="19" ry="11" transform="rotate(14 202 130)" fill="#E6CCB2" stroke="#5C3D2E" stroke-width="3"/>
-                            <g id="spoonFoodVisual">
-                                <path d="M186,127 Q202,105 218,127 Z" fill="#FFFFFF" stroke="#5C3D2E" stroke-width="2.8" stroke-linejoin="round"/>
-                                <circle cx="202" cy="118" r="4" fill="#FF6B4A"/>
-                            </g>
-                        </g>
-                    </svg>
-                </div>
-
-                <div class="stage-footer-tip">
-                    💡 <strong>스페이스바</strong> 또는 오른쪽 버튼을 눌러 언제든 새로운 한 입을 시작할 수 있어요
-                </div>
-            </section>
-
-            <!-- 오른쪽: 씹기 카운터 링 & 조작 컨트롤 -->
-            <section class="counter-card" aria-label="씹기 횟수 카운터">
-                <div class="counter-header">
-                    <span class="counter-title">현재 한 입 씹기 진행률</span>
-                    <span id="speedIndicatorBadge" class="speed-tag">보통 (0.75초)</span>
-                </div>
-
-                <!-- 대형 원형 진행률 링 -->
-                <div class="ring-wrap">
-                    <svg viewBox="0 0 180 180">
-                        <circle cx="90" cy="90" r="74" fill="var(--ring-bg)" stroke="var(--ring-track)" stroke-width="14"/>
-                        <circle cx="90" cy="90" r="60" fill="none" stroke="var(--ring-track)" stroke-width="1.5" stroke-dasharray="4 4"/>
-                        <circle id="progressRing" class="progress-ring-circle" cx="90" cy="90" r="74" fill="none" stroke="#FF7E5F" stroke-width="14" stroke-linecap="round" stroke-dasharray="464.95" stroke-dashoffset="464.95"/>
-                    </svg>
-                    <div class="ring-center-text">
-                        <span class="ring-mini-label">꼭꼭 씹은 횟수</span>
-                        <div class="ring-numbers">
-                            <span id="currentCountDisplay" class="ring-current title-font">0</span>
-                            <span id="targetCountDisplay" class="ring-target title-font">/ 20</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="controls-wrap">
-                    <button id="primaryActionBtn" class="btn-primary title-font" onclick="handlePrimaryAction()">
-                        <span>🥄</span>
-                        <span>한 입 식사 시작하기</span>
-                    </button>
-
-                    <div class="sub-controls-grid">
-                        <button id="pauseBtn" class="btn-secondary" onclick="togglePause()" disabled>
-                            <span>⏸️</span>
-                            <span>일시정지</span>
-                        </button>
-                        <button id="resetCycleBtn" class="btn-secondary" onclick="resetCycle()">
-                            <span>🔄</span>
-                            <span>이번 입 초기화</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- 오늘 뭐 먹지? 식사 메뉴 추천기 -->
-        <section class="menu-recommender-card" aria-label="오늘의 식사 메뉴 추천">
-            <div class="menu-rec-top">
-                <div class="menu-rec-heading">
-                    <span style="font-size: 1.2rem;">🍽️</span>
-                    <h2 class="menu-rec-title title-font">오늘 뭐 먹지? 메뉴 추천</h2>
-                    <span id="menuDaypartBadge" class="daypart-menu-pill">☀️ 점심 추천 리스트</span>
-                </div>
-                <button id="shuffleMenuBtn" class="shuffle-btn title-font" onclick="recommendRandomMenu()">
-                    <span class="dice-icon">🎲</span>
-                    <span>메뉴 추천받기</span>
-                </button>
-            </div>
-
-            <div id="menuResultBox" class="menu-result-box">
-                <div class="menu-info-left">
-                    <div id="recMenuEmoji" class="menu-emoji-badge">🥬</div>
-                    <div>
-                        <div class="menu-name-row">
-                            <strong id="recMenuTitle" class="menu-name title-font">제육볶음 쌈밥</strong>
-                            <span id="recMenuChewBadge" class="menu-chew-badge">권장 25번 씹기</span>
-                        </div>
-                        <p id="recMenuTip" class="menu-tip-text">
-                            쌈 채소와 고기의 식감이 살아있어요! 25번 이상 꼭꼭 씹어야 소화가 편해요.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 빠른 메뉴 선택 칩 -->
-            <div id="menuChipsContainer" class="menu-chips-wrap"></div>
-        </section>
-
-        <!-- 중단: 맞춤 설정 패널 -->
-        <section class="settings-card">
-            <!-- 1. 진행 방식 (자동 반복 / 수동 한 입) -->
-            <div class="setting-box">
-                <div class="setting-head">
-                    <span class="setting-label title-font">🔁 진행 방식</span>
-                </div>
-                <div class="segmented-control">
-                    <button id="modeAutoBtn" class="seg-btn active" onclick="setMealMode('auto')">자동 반복</button>
-                    <button id="modeManualBtn" class="seg-btn" onclick="setMealMode('manual')">한 입씩 수동</button>
-                </div>
-                <p class="setting-desc">
-                    자동 반복은 꿀꺽 삼킨 뒤 3초 숨고르기 후 다음 한 입이 자동으로 시작됩니다.
-                </p>
-            </div>
-
-            <!-- 2. 목표 씹기 횟수 설정 -->
-            <div class="setting-box">
-                <div class="setting-head">
-                    <span class="setting-label title-font">🦷 목표 씹기 횟수</span>
-                    <div class="stepper-wrap">
-                        <button class="step-mini-btn" onclick="adjustTargetChews(-5)" title="5번 줄이기">-</button>
-                        <span id="settingChewTargetLabel" class="setting-value title-font">20번</span>
-                        <button class="step-mini-btn" onclick="adjustTargetChews(5)" title="5번 늘리기">+</button>
-                    </div>
-                </div>
-                <div class="preset-grid">
-                    <button class="preset-btn" data-chews="15" onclick="setTargetChews(15)">15번 (면류)</button>
-                    <button class="preset-btn active" data-chews="20" onclick="setTargetChews(20)">20번 (기본)</button>
-                    <button class="preset-btn" data-chews="30" onclick="setTargetChews(30)">30번 (고기/현미)</button>
-                </div>
-                <p class="setting-desc">
-                    음식 종류에 맞춰 한 입당 꼭꼭 씹을 목표 횟수를 선택할 수 있습니다.
-                </p>
-            </div>
-
-            <!-- 3. 씹는 속도 조절 슬라이더 (0.4초 ~ 1.5초) -->
-            <div class="setting-box">
-                <div class="setting-head">
-                    <span class="setting-label title-font">⏱️ 꼭꼭 씹는 속도</span>
-                    <span id="settingSpeedLabel" class="setting-value title-font">0.75초 간격</span>
-                </div>
-                <div class="slider-container">
-                    <input
-                        id="chewSpeedSlider"
-                        class="speed-slider"
-                        type="range"
-                        min="0.4"
-                        max="1.5"
-                        step="0.05"
-                        value="0.75"
-                        oninput="handleSpeedSliderChange(this.value)"
-                    />
-                    <div class="slider-ticks">
-                        <span>빠름 (0.4초)</span>
-                        <span>보통 (0.8초)</span>
-                        <span>여유 (1.5초)</span>
-                    </div>
-                </div>
-                <p class="setting-desc">
-                    슬라이더를 움직이면 캐릭터가 씹는 박자와 효과음 속도도 즉시 맞춰집니다.
-                </p>
-            </div>
-        </section>
-
-        <!-- 하단: 오늘의 식사 기록 -->
-        <footer class="stats-card">
-            <div class="stats-header">
-                <h2 class="stats-title title-font">
-                    <span>📊</span>
-                    <span>오늘의 건강한 식사 기록</span>
-                </h2>
-                <button class="reset-link" onclick="resetDailyStats()">기록 초기화</button>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <p class="stat-label">오늘 먹은 한 입</p>
-                    <p class="stat-num title-font">
-                        <span id="statTotalBites">0</span><span class="stat-unit">입</span>
-                    </p>
-                </div>
-                <div class="stat-item">
-                    <p class="stat-label">총 꼭꼭 씹은 횟수</p>
-                    <p class="stat-num title-font" style="color: #E07A5F;">
-                        <span id="statTotalChews">0</span><span class="stat-unit">번</span>
-                    </p>
-                </div>
-                <div class="stat-item">
-                    <p class="stat-label">식사 경과 시간</p>
-                    <p id="statMealTime" class="stat-num title-font" style="color: var(--text-title);">00:00</p>
-                </div>
-            </div>
-        </footer>
-    </div>
-
-    <!-- 건강하게 꼭꼭 씹기 가이드 모달 -->
-    <div id="tipModal" class="modal-backdrop" onclick="if(event.target===this) closeTipModal()">
-        <div class="modal-box">
-            <div class="modal-head">
-                <h3 class="title-font" style="font-size: 1.15rem; color: var(--text-title);">🥗 꼭꼭 씹어 먹으면 좋은 점</h3>
-                <button class="modal-close" onclick="closeTipModal()">✕</button>
-            </div>
-            <ul class="tip-list">
-                <li><strong>1. 소화 부담 감소:</strong> 침 속 아밀라아제 효소가 음식물과 충분히 섞여 위와 장의 피로를 크게 줄여줍니다.</li>
-                <li><strong>2. 자연스러운 과식 예방:</strong> 식사 시작 후 약 15~20분이 지나야 포만감 호르몬(렙틴)이 분비되므로 천천히 씹으면 적정량만 먹게 됩니다.</li>
-                <li><strong>3. 혈당 스파이크 완화:</strong> 탄수화물을 천천히 씹어 흡수 속도를 늦추면 식후 졸음과 혈당 급상승을 예방할 수 있습니다.</li>
-            </ul>
+    <!-- 메인 캐릭터 & 씹기 스테이지 -->
+    <section class="card character-stage" id="character-stage">
+      <!-- 동물 친구 선택 -->
+      <div class="selector-bar" style="width: 100%;">
+        <span style="font-size: 0.78rem; font-weight: 800; color: var(--text-sub);">오늘의 밥친구:</span>
+        <div class="char-tabs" id="char-tabs">
+          <button class="char-tab active" data-char="bear">🐻 곰돌이</button>
+          <button class="char-tab" data-char="rabbit">🐰 토끼</button>
+          <button class="char-tab" data-char="dino">🦖 공룡</button>
         </div>
+      </div>
+
+      <!-- 연령·식감별 원터치 프리셋 -->
+      <div class="preset-row" id="preset-row" style="width: 100%;">
+        <button class="preset-btn" data-chews="10" data-speed="1.0">
+          <strong>🍼 유아식 (2~3세)</strong>
+          <span>10회 · 천천히</span>
+        </button>
+        <button class="preset-btn active" data-chews="15" data-speed="0.85">
+          <strong>🐣 유치원 (4~5세)</strong>
+          <span>15회 · 씩씩하게</span>
+        </button>
+        <button class="preset-btn" data-chews="20" data-speed="0.75">
+          <strong>🦖 초등·고기 (6세+)</strong>
+          <span>20회 · 꼭꼭 씹기</span>
+        </button>
+      </div>
+
+      <div class="status-bubble" id="status-text">안녕! 나랑 같이 꼭꼭 씹어볼까?</div>
+
+      <!-- 인라인 SVG 동물 캐릭터 -->
+      <svg id="mate-svg" viewBox="0 0 210 175" xmlns="http://www.w3.org/2000/svg">
+        <!-- 동물별 귀/뿔 레이어 -->
+        <g id="char-ears">
+          <!-- 기본 곰돌이 귀 -->
+          <circle cx="62" cy="52" r="18" fill="#E8B88A" />
+          <circle cx="62" cy="52" r="10" fill="#FFD8B8" />
+          <circle cx="148" cy="52" r="18" fill="#E8B88A" />
+          <circle cx="148" cy="52" r="10" fill="#FFD8B8" />
+        </g>
+
+        <!-- 얼굴 본체 -->
+        <g class="chewing-head">
+          <rect id="char-face" x="52" y="42" width="106" height="92" rx="46" fill="#F5CFA8" />
+          <!-- 눈 -->
+          <circle cx="84" cy="82" r="6.5" fill="#2D2620" />
+          <circle cx="86" cy="80" r="2.2" fill="#FFFFFF" />
+          <circle cx="126" cy="82" r="6.5" fill="#2D2620" />
+          <circle cx="128" cy="80" r="2.2" fill="#FFFFFF" />
+
+          <!-- 볼터치 -->
+          <ellipse class="cheek-left" cx="71" cy="96" rx="11" ry="6.5" fill="#FF8E7A" opacity="0.7" />
+          <ellipse class="cheek-right" cx="139" cy="96" rx="11" ry="6.5" fill="#FF8E7A" opacity="0.7" />
+
+          <!-- 코 & 입 -->
+          <ellipse id="char-nose" cx="105" cy="91" rx="5.5" ry="3.8" fill="#5C4433" />
+          <ellipse class="mouth-chew" cx="105" cy="105" rx="10" ry="6.5" fill="#E05A5A" style="transform-origin: 105px 105px;" />
+        </g>
+
+        <!-- 숟가락 & 음식 -->
+        <g id="spoon-group" transform="translate(132, 118) rotate(-18)">
+          <rect x="24" y="8" width="44" height="6" rx="3" fill="#C4C9D0" />
+          <ellipse cx="16" cy="11" rx="16" ry="10" fill="#DCE1E7" />
+          <g id="spoon-food">
+            <circle cx="16" cy="9" r="7" fill="#FFFFFF" />
+            <circle cx="14" cy="7" r="2" fill="#FF8533" />
+          </g>
+        </g>
+      </svg>
+
+      <div class="chew-counter-display">
+        <span id="current-chew">0</span> <small>/ <span id="target-chew-display">15</span>번</small>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+
+      <!-- 오늘의 편식 극복 미션 -->
+      <div class="mission-box">
+        <div class="mission-top">
+          <span>🌱 오늘의 용감한 채소 미션 (1개 선택)</span>
+          <span id="selected-veg-label">🥕 당근</span>
+        </div>
+        <div class="veg-chips" id="veg-chips">
+          <button class="veg-chip active" data-veg="당근" data-icon="🥕" data-type="carrot">🥕 당근</button>
+          <button class="veg-chip" data-veg="양파" data-icon="🧅" data-type="onion">🧅 양파</button>
+          <button class="veg-chip" data-veg="브로콜리" data-icon="🥦" data-type="broccoli">🥦 브로콜리</button>
+          <button class="veg-chip" data-veg="시금치" data-icon="🥬" data-type="spinach">🥬 시금치</button>
+          <button class="veg-chip" data-veg="버섯" data-icon="🍄" data-type="mushroom">🍄 버섯</button>
+        </div>
+      </div>
+
+      <!-- 식사 컨트롤 버튼 -->
+      <div class="action-grid">
+        <button class="btn-auto" id="auto-btn">▶ 같이 씹기 시작</button>
+        <button class="btn-bite" id="manual-btn">🥄 한 입 냠냠</button>
+        <button class="btn-brave" id="brave-btn">🌟 용감한 한 입! (당근 도전 +별 2개)</button>
+      </div>
+    </section>
+
+    <!-- 칭찬 스티커판 -->
+    <section class="card">
+      <div class="sticker-header">
+        <h2>⭐ 우리 아이 칭찬 스티커판</h2>
+        <span class="sticker-count" id="sticker-count-text">0 / 10개 모았어요!</span>
+      </div>
+      <div class="sticker-board" id="sticker-board"></div>
+      <div class="sticker-sub">
+        <span>한 입 다 씹으면 스티커 1개! 용감한 채소 도전은 2개!</span>
+        <button class="reset-sticker-btn" id="reset-sticker-btn">새 판 시작</button>
+      </div>
+    </section>
+
+    <!-- 어린이 반찬 룰렛 -->
+    <section class="card">
+      <div class="slot-header">
+        <h2>🎰 오늘 뭐 먹을까? 어린이 반찬 룰렛</h2>
+        <button class="manage-btn" id="open-manage-btn">✏️ 우리 아이 반찬 (<span id="custom-count-badge">0</span>)</button>
+      </div>
+      <div class="slot-box">
+        <div class="slot-result">
+          <span class="slot-category-tag" id="slot-cat-tag">추천 어린이 식단</span>
+          <div class="slot-menu-name" id="slot-menu-name">룰렛을 돌려보세요!</div>
+          <div class="slot-menu-meta" id="slot-menu-meta">음식에 맞는 씹기 횟수가 자동 설정돼요</div>
+        </div>
+        <button class="spin-btn" id="spin-btn">🎲 돌리기</button>
+      </div>
+    </section>
+
+    <!-- 부모님 전용 영역 (Parental Gate) -->
+    <section class="card parent-card">
+      <div class="parent-gate-box">
+        <div class="parent-gate-info">
+          <strong>🔒 부모님 전용: 이유식 매장 & 유아 간식</strong>
+          <span>아이가 실수로 누르지 않도록 보호되어 있습니다</span>
+        </div>
+        <button class="unlock-btn" id="parent-unlock-btn">열기</button>
+      </div>
+
+      <div class="parent-content" id="parent-content">
+        <!-- 1. 현재 위치 기반 주변 이유식·유아반찬 업체 찾기 -->
+        <div>
+          <div class="parent-section-title">📍 내 주변 이유식 · 유아반찬 가게 찾기</div>
+          <div class="local-finder-box">
+            <div class="location-status" id="location-status">
+              버튼을 누르면 현재 위치를 확인해 주변 수제 이유식·아동식 매장을 찾아줍니다.
+            </div>
+            <div class="local-btn-row">
+              <button class="map-btn" id="find-naver-btn">네이버 지도로 찾기</button>
+              <button class="map-btn kakao" id="find-kakao-btn">카카오맵으로 찾기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 이유식 · 유아 간식 추천 큐레이션 (제휴 광고 영역) -->
+        <div>
+          <div class="parent-section-title">🍼 잘 씹는 아이를 위한 추천 이유식 · 간식</div>
+          <div class="promo-list">
+            <a class="promo-item" href="https://www.coupang.com/np/search?q=%EC%9C%A0%EA%B8%B0%EB%86%8D+%EC%96%B4%EB%A6%B0%EC%9D%B4+%EB%96%A1%EB%BD%95+%EA%B0%84%EC%8B%9D" target="_blank" rel="noopener noreferrer">
+              <div class="promo-text">
+                <strong>유기농 쌀 떡뻥 & 씹기 연습 스틱 간식</strong>
+                <span>잇몸과 턱 근육 발달을 돕는 무첨가 유아 간식 모음</span>
+              </div>
+              <span class="promo-tag">보러가기 ›</span>
+            </a>
+            <a class="promo-item" href="https://www.coupang.com/np/search?q=%EC%88%98%EC%A0%9C+%EC%9D%B4%EC%9C%A0%EC%8B%9D+%EC%9C%A0%EC%95%84%EC%8B%9D+%EB%B0%B0%EB%8B%AC" target="_blank" rel="noopener noreferrer">
+              <div class="promo-text">
+                <strong>단계별 수제 이유식 · 어린이 반찬 정기배송</strong>
+                <span>편식 심한 아이도 잘 먹는 영양 균형 맞춤 식단</span>
+              </div>
+              <span class="promo-tag">보러가기 ›</span>
+            </a>
+            <a class="promo-item" href="https://www.coupang.com/np/search?q=%EC%9C%A0%EC%95%84+%EC%9E%90%EA%B8%B0%EC%A3%BC%EB%8F%84+%EC%88%9F%EA%B0%80%EB%9D%BD+%ED%8F%AC%ED%81%AC+%EC%84%B8%ED%8A%B8" target="_blank" rel="noopener noreferrer">
+              <div class="promo-text">
+                <strong>아이 손에 딱 맞는 자기주도 유아 식기 세트</strong>
+                <span>스스로 떠먹는 즐거움을 키워주는 안전 실리콘 수저</span>
+              </div>
+              <span class="promo-tag">보러가기 ›</span>
+            </a>
+          </div>
+          <p class="ad-disclosure" style="margin-top: 8px;">
+            ※ 이 영역은 부모님 전용 제휴 추천 링크를 포함할 수 있습니다.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 우리 아이 반찬 추가 모달 -->
+  <div class="modal-backdrop" id="manage-modal">
+    <div class="modal-sheet">
+      <div class="modal-top">
+        <h3>🍱 우리 아이 반찬 관리</h3>
+        <button class="close-modal" id="close-manage-btn">✕</button>
+      </div>
+      <div class="form-grid">
+        <input type="text" id="new-menu-name" placeholder="반찬 이름 (예: 계란말이, 소고기 주먹밥)" maxlength="20" />
+        <input type="number" id="new-menu-chews" min="5" max="40" value="15" placeholder="목표 씹기 횟수 (기본 15회)" />
+        <button class="btn-auto" id="add-menu-btn">+ 우리 아이 메뉴에 추가</button>
+      </div>
+      <div class="custom-list" id="custom-menu-list"></div>
     </div>
-
-    <script>
-        /* =========================================================================
-         * 1. 상태 관리 (State, Daypart Mode & Menu Data)
-         * ========================================================================= */
-        const STATES = {
-            IDLE: 'IDLE',
-            BITE: 'BITE',
-            CHEWING: 'CHEWING',
-            SWALLOW: 'SWALLOW',
-            REST: 'REST',
-            PAUSED: 'PAUSED'
-        };
-
-        let appState = STATES.IDLE;
-        let stateBeforePause = STATES.IDLE;
-        let daypartMode = 'lunch'; // 'lunch' | 'dinner'
-
-        let targetChews = 20;
-        let chewIntervalMs = 750;
-        let mealMode = 'auto';
-        let soundEnabled = true;
-        let wakeLockSentinel = null;
-
-        let currentChewCount = 0;
-        let restCountdown = 3;
-        let sideDishIndex = 0;
-
-        let stats = {
-            totalBites: 0,
-            totalChews: 0,
-            elapsedSeconds: 0
-        };
-
-        let phaseTimeout = null;
-        let chewInterval = null;
-        let mealClockInterval = null;
-
-        const RING_CIRCUMFERENCE = 464.95;
-        const CHEW_WORDS = ['꼭!', '꼭꼭!', '오물오물', '냠냠', '옴뇸뇸', '와구와구', '챱챱'];
-
-        const SIDE_DISHES = [
-            { name: '계란말이', emoji: '🥚' },
-            { name: '배추김치', emoji: '🥬' },
-            { name: '콩나물무침', emoji: '🌱' },
-            { name: '멸치볶음', emoji: '🐟' },
-            { name: '깍두기', emoji: '🟥' }
-        ];
-
-        const SPOON_FOOD_SVGS = {
-            rice: `<path d="M186,127 Q202,105 218,127 Z" fill="#FFFFFF" stroke="#5C3D2E" stroke-width="2.8" stroke-linejoin="round"/>
-                   <circle cx="202" cy="118" r="4" fill="#FF6B4A"/>`,
-            noodle: `<path d="M187,125 Q194,112 200,124 Q206,112 215,125" fill="none" stroke="#FBBF24" stroke-width="4" stroke-linecap="round"/>
-                     <path d="M190,128 Q201,117 212,128" fill="none" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/>`,
-            meat: `<ellipse cx="202" cy="121" rx="14" ry="8" fill="#B45309" stroke="#5C3D2E" stroke-width="2.6"/>
-                   <line x1="195" y1="119" x2="209" y2="123" stroke="#FDE68A" stroke-width="2" stroke-linecap="round"/>`,
-            salad: `<circle cx="195" cy="122" r="7" fill="#52B788" stroke="#5C3D2E" stroke-width="2.2"/>
-                    <circle cx="208" cy="122" r="7" fill="#74C69D" stroke="#5C3D2E" stroke-width="2.2"/>
-                    <circle cx="202" cy="116" r="6" fill="#FF7E67" stroke="#5C3D2E" stroke-width="2"/>`
-        };
-
-        const MEAL_MENUS = {
-            lunch: [
-                {
-                    id: 'l1',
-                    emoji: '🥬',
-                    title: '제육볶음 쌈밥',
-                    chews: 25,
-                    foodType: 'meat',
-                    tip: '쌈 채소와 고기의 식감이 살아있어요! 25번 이상 꼭꼭 씹어야 소화가 편해요.'
-                },
-                {
-                    id: 'l2',
-                    emoji: '🍲',
-                    title: '김치찌개 정식',
-                    chews: 20,
-                    foodType: 'rice',
-                    tip: '국물에 밥을 말아 후루룩 삼키기 쉬워요. 건더기와 함께 20번 천천히 씹어보세요!'
-                },
-                {
-                    id: 'l3',
-                    emoji: '🥗',
-                    title: '산채 비빔밥',
-                    chews: 25,
-                    foodType: 'salad',
-                    tip: '다양한 나물 섬유질이 풍부해요. 25번 꼭꼭 씹으면 고소한 풍미가 배가 됩니다.'
-                },
-                {
-                    id: 'l4',
-                    emoji: '🍛',
-                    title: '바삭 수제 돈까스',
-                    chews: 25,
-                    foodType: 'meat',
-                    tip: '바삭한 튀김옷과 두툼한 고기는 25번 씹어 부드럽게 넘겨주세요!'
-                },
-                {
-                    id: 'l5',
-                    emoji: '🍜',
-                    title: '베트남 쌀국수',
-                    chews: 15,
-                    foodType: 'noodle',
-                    tip: '면 요리는 씹지 않고 삼키기 가장 쉬워요! 최소 15번은 끊어서 꼭꼭 씹어주세요.'
-                },
-                {
-                    id: 'l6',
-                    emoji: '🥑',
-                    title: '닭가슴살 아보카도 샐러드',
-                    chews: 25,
-                    foodType: 'salad',
-                    tip: '생채소와 단백질 식단은 25번 천천히 씹어야 오후 식곤증을 예방할 수 있어요!'
-                },
-                {
-                    id: 'l7',
-                    emoji: '🥘',
-                    title: '해물 순두부찌개',
-                    chews: 15,
-                    foodType: 'rice',
-                    tip: '부드러운 순두부라도 밥알과 해산물은 15~20번 충분히 씹어서 삼켜보세요.'
-                },
-                {
-                    id: 'l8',
-                    emoji: '🍛',
-                    title: '일본식 카레라이스',
-                    chews: 20,
-                    foodType: 'rice',
-                    tip: '부드럽게 넘어가기 쉬운 카레일수록 의식적으로 20번 씹어 포만감을 높여주세요!'
-                }
-            ],
-            dinner: [
-                {
-                    id: 'd1',
-                    emoji: '🐟',
-                    title: '연어 포케 덮밥',
-                    chews: 25,
-                    foodType: 'salad',
-                    tip: '저녁에 부담 없는 고단백 식단! 아삭한 채소와 현미밥을 25번 꼭꼭 씹어보세요.'
-                },
-                {
-                    id: 'd2',
-                    emoji: '🫕',
-                    title: '소고기 야채 샤브샤브',
-                    chews: 25,
-                    foodType: 'meat',
-                    tip: '따뜻한 육수와 채소, 얇은 고기를 25번 천천히 씹으면 저녁 속이 아주 편안해요.'
-                },
-                {
-                    id: 'd3',
-                    emoji: '🥓',
-                    title: '노릇노릇 삼겹살 구이',
-                    chews: 30,
-                    foodType: 'meat',
-                    tip: '저녁 고기 식사는 위장 부담을 줄이기 위해 30번 충분히 씹어 삼키는 게 좋아요!'
-                },
-                {
-                    id: 'd4',
-                    emoji: '🥚',
-                    title: '구수한 된장찌개와 계란말이',
-                    chews: 20,
-                    foodType: 'rice',
-                    tip: '집밥 느낌의 든든한 저녁 한 상! 20번 천천히 씹으며 하루의 피로를 풀어보세요.'
-                },
-                {
-                    id: 'd5',
-                    emoji: '🍜',
-                    title: '따뜻한 잔치국수',
-                    chews: 15,
-                    foodType: 'noodle',
-                    tip: '면발이 부드러워 그냥 삼키기 쉬워요. 한 젓가락에 15번씩 꼭 씹어주세요!'
-                },
-                {
-                    id: 'd6',
-                    emoji: '🧈',
-                    title: '두부김치 정식',
-                    chews: 25,
-                    foodType: 'rice',
-                    tip: '볶음김치의 아삭한 식감과 두부를 함께 25번 꼭꼭 씹어 드세요.'
-                },
-                {
-                    id: 'd7',
-                    emoji: '🦆',
-                    title: '부추 오리고기 볶음',
-                    chews: 30,
-                    foodType: 'meat',
-                    tip: '쫄깃한 오리고기와 부추는 30번 꼭꼭 씹을수록 고소하고 소화가 잘 됩니다.'
-                },
-                {
-                    id: 'd8',
-                    emoji: '🍣',
-                    title: '모듬 초밥 세트',
-                    chews: 20,
-                    foodType: 'rice',
-                    tip: '한 입 크기 초밥도 밥알과 생선을 20번 이상 천천히 음미하며 씹어보세요!'
-                }
-            ]
-        };
-
-        let selectedMenuId = null;
-
-        /* =========================================================================
-         * 2. Web Audio API 내장 효과음 엔진 (오프라인 100% 작동)
-         * ========================================================================= */
-        let audioCtx = null;
-
-        function ensureAudioContext() {
-            if (!audioCtx) {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioContextClass) {
-                    audioCtx = new AudioContextClass();
-                }
-            }
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
-
-        function playBiteSound() {
-            if (!soundEnabled) return;
-            try {
-                ensureAudioContext();
-                if (!audioCtx) return;
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(320, now);
-                osc.frequency.exponentialRampToValueAtTime(580, now + 0.14);
-                gain.gain.setValueAtTime(0.16, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.17);
-            } catch (e) {}
-        }
-
-        function playChewTickSound(step, total) {
-            if (!soundEnabled) return;
-            try {
-                ensureAudioContext();
-                if (!audioCtx) return;
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                const progress = total > 0 ? step / total : 0;
-                const baseFreq = 420 + progress * 160;
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(baseFreq, now);
-                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.18, now + 0.07);
-                gain.gain.setValueAtTime(0.11, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.09);
-            } catch (e) {}
-        }
-
-        function playSwallowSound() {
-            if (!soundEnabled) return;
-            try {
-                ensureAudioContext();
-                if (!audioCtx) return;
-                const notes = [523.25, 659.25, 783.99];
-                notes.forEach((freq, idx) => {
-                    const start = audioCtx.currentTime + idx * 0.07;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, start);
-                    gain.gain.setValueAtTime(0.14, start);
-                    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.28);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(start);
-                    osc.stop(start + 0.3);
-                });
-            } catch (e) {}
-        }
-
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            const btn = document.getElementById('soundToggleBtn');
-            const icon = document.getElementById('soundIcon');
-            const text = document.getElementById('soundText');
-            if (btn) btn.classList.toggle('muted', !soundEnabled);
-            if (icon) icon.textContent = soundEnabled ? '🔊' : '🔇';
-            if (text) text.textContent = soundEnabled ? '효과음' : '음소거';
-            if (soundEnabled) playBiteSound();
-        }
-
-        /* =========================================================================
-         * 3. 점심 / 저녁 모드 전환 & 메뉴 추천기 로직
-         * ========================================================================= */
-        function detectInitialDaypart() {
-            const currentHour = new Date().getHours();
-            return currentHour < 16 ? 'lunch' : 'dinner';
-        }
-
-        function setDaypartMode(mode, applyDefaultPacing = true) {
-            daypartMode = mode;
-            const isDinner = mode === 'dinner';
-
-            document.body.classList.toggle('dinner-mode', isDinner);
-            const lunchBtn = document.getElementById('lunchModeBtn');
-            const dinnerBtn = document.getElementById('dinnerModeBtn');
-            if (lunchBtn) lunchBtn.classList.toggle('active', !isDinner);
-            if (dinnerBtn) dinnerBtn.classList.toggle('active', isDinner);
-
-            const brandIcon = document.getElementById('brandIcon');
-            const brandSub = document.getElementById('brandSubtitle');
-            if (brandIcon) brandIcon.textContent = isDinner ? '🌙' : '☀️';
-            if (brandSub) {
-                brandSub.textContent = isDinner
-                    ? '편안한 저녁 식사! 잠들기 전 속 편한 25번 씹기 루틴'
-                    : '활기찬 점심 식사! 소화 잘 되는 20번 씹기 루틴';
-            }
-
-            const windowSky = document.getElementById('windowSky');
-            const windowSun = document.getElementById('windowSun');
-            const windowMoon = document.getElementById('windowMoon');
-            const dinnerLampGlow = document.getElementById('dinnerLampGlow');
-            if (windowSky) windowSky.setAttribute('fill', isDinner ? '#1E293B' : '#E0F2FE');
-            if (windowSun) windowSun.setAttribute('opacity', isDinner ? '0' : '1');
-            if (windowMoon) windowMoon.setAttribute('opacity', isDinner ? '1' : '0');
-            if (dinnerLampGlow) dinnerLampGlow.setAttribute('opacity', isDinner ? '1' : '0');
-
-            const menuDaypartBadge = document.getElementById('menuDaypartBadge');
-            if (menuDaypartBadge) {
-                menuDaypartBadge.textContent = isDinner ? '🌙 저녁 추천 리스트' : '☀️ 점심 추천 리스트';
-            }
-
-            if (applyDefaultPacing) {
-                const defaultChews = isDinner ? 25 : 20;
-                const defaultSpeed = isDinner ? 0.85 : 0.75;
-                setTargetChews(defaultChews);
-                const slider = document.getElementById('chewSpeedSlider');
-                if (slider) slider.value = defaultSpeed;
-                handleSpeedSliderChange(defaultSpeed);
-            }
-
-            const pool = MEAL_MENUS[daypartMode];
-            applyRecommendedMenu(pool[0], false);
-            renderMenuChips();
-        }
-
-        function renderMenuChips() {
-            const container = document.getElementById('menuChipsContainer');
-            if (!container) return;
-            const pool = MEAL_MENUS[daypartMode];
-            container.innerHTML = pool.map(menu => `
-                <button
-                    class="menu-chip ${menu.id === selectedMenuId ? 'active' : ''}"
-                    onclick="selectMenuById('${menu.id}')"
-                >
-                    ${menu.emoji} ${menu.title} (${menu.chews}번)
-                </button>
-            `).join('');
-        }
-
-        function selectMenuById(id) {
-            const pool = MEAL_MENUS[daypartMode];
-            const found = pool.find(m => m.id === id);
-            if (found) {
-                applyRecommendedMenu(found, true);
-            }
-        }
-
-        function applyRecommendedMenu(menu, updateChewsAndNotify = true) {
-            selectedMenuId = menu.id;
-            const emojiEl = document.getElementById('recMenuEmoji');
-            const titleEl = document.getElementById('recMenuTitle');
-            const badgeEl = document.getElementById('recMenuChewBadge');
-            const tipEl = document.getElementById('recMenuTip');
-
-            if (emojiEl) emojiEl.textContent = menu.emoji;
-            if (titleEl) titleEl.textContent = menu.title;
-            if (badgeEl) badgeEl.textContent = `권장 ${menu.chews}번 씹기`;
-            if (tipEl) tipEl.textContent = menu.tip;
-
-            const spoonFood = document.getElementById('spoonFoodVisual');
-            if (spoonFood && SPOON_FOOD_SVGS[menu.foodType]) {
-                spoonFood.innerHTML = SPOON_FOOD_SVGS[menu.foodType];
-            }
-
-            if (updateChewsAndNotify) {
-                setTargetChews(menu.chews);
-                const box = document.getElementById('menuResultBox');
-                if (box) {
-                    box.classList.remove('pop');
-                    void box.offsetWidth;
-                    box.classList.add('pop');
-                    setTimeout(() => box.classList.remove('pop'), 300);
-                }
-
-                if (appState === STATES.IDLE) {
-                    const speech = document.getElementById('speechText');
-                    if (speech) {
-                        speech.textContent = `"오늘 메뉴는 '${menu.title}'! 권장 횟수인 ${menu.chews}번에 맞춰드렸어요 🥄"`;
-                    }
-                }
-            }
-
-            renderMenuChips();
-        }
-
-        function recommendRandomMenu() {
-            const pool = MEAL_MENUS[daypartMode];
-            const btn = document.getElementById('shuffleMenuBtn');
-            if (btn) btn.classList.add('spinning');
-            playChewTickSound(5, 20);
-
-            let ticks = 0;
-            const maxTicks = 7;
-            const shuffleTimer = setInterval(() => {
-                const tempItem = pool[Math.floor(Math.random() * pool.length)];
-                const emojiEl = document.getElementById('recMenuEmoji');
-                const titleEl = document.getElementById('recMenuTitle');
-                if (emojiEl) emojiEl.textContent = tempItem.emoji;
-                if (titleEl) titleEl.textContent = tempItem.title;
-                ticks++;
-
-                if (ticks >= maxTicks) {
-                    clearInterval(shuffleTimer);
-                    if (btn) btn.classList.remove('spinning');
-
-                    const candidates = pool.filter(m => m.id !== selectedMenuId);
-                    const picked = candidates[Math.floor(Math.random() * candidates.length)] || pool[0];
-                    applyRecommendedMenu(picked, true);
-                    playBiteSound();
-                    spawnFloatingWord(`${picked.emoji} ${picked.title}!`, false);
-                }
-            }, 65);
-        }
-
-        /* =========================================================================
-         * 4. 화면 꺼짐 방지 (Screen Wake Lock API)
-         * ========================================================================= */
-        async function toggleWakeLock() {
-            const btn = document.getElementById('wakeLockBtn');
-            const text = document.getElementById('wakeText');
-            const icon = document.getElementById('wakeIcon');
-
-            if (!('wakeLock' in navigator)) {
-                spawnFloatingWord('이 브라우저는 자동 지원을 사용해요', false);
-                return;
-            }
-
-            try {
-                if (wakeLockSentinel) {
-                    await wakeLockSentinel.release();
-                    wakeLockSentinel = null;
-                    if (btn) btn.classList.remove('wake-active');
-                    if (icon) icon.textContent = '📱';
-                    if (text) text.textContent = '화면 유지';
-                    spawnFloatingWord('화면 유지 해제', false);
-                } else {
-                    wakeLockSentinel = await navigator.wakeLock.request('screen');
-                    if (btn) btn.classList.add('wake-active');
-                    if (icon) icon.textContent = '🔆';
-                    if (text) text.textContent = '화면 켜짐 유지중';
-                    spawnFloatingWord('식사 중 화면이 꺼지지 않아요!', false);
-
-                    wakeLockSentinel.addEventListener('release', () => {
-                        wakeLockSentinel = null;
-                        if (btn) btn.classList.remove('wake-active');
-                        if (icon) icon.textContent = '📱';
-                        if (text) text.textContent = '화면 유지';
-                    });
-                }
-            } catch (err) {
-                spawnFloatingWord('화면 유지 전환 완료', false);
-            }
-        }
-
-        /* =========================================================================
-         * 5. 캐릭터 표정 및 SVG 애니메이션 제어 (속도 동기화)
-         * ========================================================================= */
-        function syncAnimationDurationToSpeed() {
-            const halfCycleSec = Math.max(0.18, (chewIntervalMs / 1000) * 0.48);
-            document.documentElement.style.setProperty('--chew-duration', `${halfCycleSec.toFixed(3)}s`);
-        }
-
-        function spawnFloatingWord(word, isSwallow = false) {
-            const layer = document.getElementById('floatingLayer') || document.querySelector('.stage-card');
-            if (!layer) return;
-
-            const bubble = document.createElement('div');
-            bubble.textContent = word;
-            bubble.style.position = 'absolute';
-            bubble.style.left = `${35 + Math.random() * 30}%`;
-            bubble.style.top = isSwallow ? '46%' : '42%';
-            bubble.style.transform = 'translate(-50%, -50%)';
-            bubble.style.padding = isSwallow ? '6px 14px' : '4px 10px';
-            bubble.style.borderRadius = '999px';
-            bubble.style.fontWeight = '900';
-            bubble.style.fontSize = isSwallow ? '1.05rem' : '0.85rem';
-            bubble.style.background = isSwallow ? '#10B981' : 'var(--card-bg)';
-            bubble.style.color = isSwallow ? '#FFFFFF' : 'var(--primary)';
-            bubble.style.border = isSwallow ? 'none' : '1.5px solid var(--border-warm)';
-            bubble.style.boxShadow = '0 4px 10px rgba(0,0,0,0.12)';
-            bubble.style.pointerEvents = 'none';
-            bubble.style.zIndex = '25';
-            bubble.style.transition = 'all 0.75s cubic-bezier(0.22, 1, 0.36, 1)';
-
-            layer.appendChild(bubble);
-            requestAnimationFrame(() => {
-                bubble.style.top = isSwallow ? '30%' : '28%';
-                bubble.style.opacity = '0';
-                bubble.style.transform = 'translate(-50%, -50%) scale(1.12)';
-            });
-            setTimeout(() => bubble.remove(), 780);
-        }
-
-        function setCharacterVisualState(state) {
-            const mouthIdle = document.getElementById('mouthIdle');
-            const mouthOpen = document.getElementById('mouthOpen');
-            const mouthChew = document.getElementById('mouthChew');
-            const mouthHappy = document.getElementById('mouthHappy');
-            const spoonGroup = document.getElementById('spoonFeedingGroup');
-            const headGroup = document.getElementById('characterHeadGroup');
-            const leftCheek = document.getElementById('leftCheek');
-            const rightCheek = document.getElementById('rightCheek');
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusBadgeText');
-
-            if (mouthIdle) mouthIdle.setAttribute('opacity', state === STATES.IDLE || state === STATES.REST || state === STATES.PAUSED ? '1' : '0');
-            if (mouthOpen) mouthOpen.setAttribute('opacity', state === STATES.BITE ? '1' : '0');
-            if (mouthChew) mouthChew.setAttribute('opacity', state === STATES.CHEWING ? '1' : '0');
-            if (mouthHappy) mouthHappy.setAttribute('opacity', state === STATES.SWALLOW ? '1' : '0');
-            if (spoonGroup) spoonGroup.setAttribute('opacity', state === STATES.BITE ? '1' : '0');
-
-            if (statusDot) {
-                statusDot.className = 'status-dot';
-                if (state === STATES.CHEWING) statusDot.classList.add('chewing');
-                else if (state === STATES.SWALLOW) statusDot.classList.add('swallow');
-                else if (state === STATES.REST) statusDot.classList.add('rest');
-                else if (state === STATES.PAUSED) statusDot.classList.add('paused');
-            }
-
-            const statusLabels = {
-                [STATES.IDLE]: '식사 준비 완료',
-                [STATES.BITE]: '한 입 아~ 먹는 중',
-                [STATES.CHEWING]: '꼭꼭 씹는 중',
-                [STATES.SWALLOW]: '꿀꺽~ 삼키기!',
-                [STATES.REST]: '잠시 숨고르기',
-                [STATES.PAUSED]: '일시정지됨'
-            };
-            if (statusText) statusText.textContent = statusLabels[state] || '식사 중';
-
-            if (headGroup) {
-                headGroup.classList.remove('chewing-bounce');
-                if (state === STATES.CHEWING) {
-                    void headGroup.offsetWidth;
-                    headGroup.classList.add('chewing-bounce');
-                }
-            }
-            if (leftCheek && rightCheek) {
-                leftCheek.classList.remove('cheek-puff');
-                rightCheek.classList.remove('cheek-puff');
-                if (state === STATES.CHEWING) {
-                    leftCheek.classList.add('cheek-puff');
-                    rightCheek.classList.add('cheek-puff');
-                }
-            }
-        }
-
-        function triggerSingleChewPulse() {
-            const headGroup = document.getElementById('characterHeadGroup');
-            const leftCheek = document.getElementById('leftCheek');
-            const rightCheek = document.getElementById('rightCheek');
-            if (headGroup) {
-                headGroup.style.transform = 'translateY(-4px) scale(1.02)';
-                setTimeout(() => {
-                    headGroup.style.transform = 'translateY(0) scale(1)';
-                }, Math.min(180, chewIntervalMs * 0.4));
-            }
-            if (leftCheek && rightCheek) {
-                leftCheek.setAttribute('r', '17');
-                rightCheek.setAttribute('r', '17');
-                setTimeout(() => {
-                    leftCheek.setAttribute('r', '13');
-                    rightCheek.setAttribute('r', '13');
-                }, Math.min(220, chewIntervalMs * 0.48));
-            }
-        }
-
-        /* =========================================================================
-         * 6. 카운터 링 및 버튼 UI 업데이트
-         * ========================================================================= */
-        function updateProgressRing(current, total, strokeColor = '#FF7E5F') {
-            const ring = document.getElementById('progressRing');
-            const currentEl = document.getElementById('currentCountDisplay');
-            const targetEl = document.getElementById('targetCountDisplay');
-
-            if (currentEl) currentEl.textContent = current;
-            if (targetEl) targetEl.textContent = `/ ${total}`;
-            if (ring) {
-                const ratio = total > 0 ? Math.min(1, Math.max(0, current / total)) : 0;
-                const offset = RING_CIRCUMFERENCE * (1 - ratio);
-                ring.style.strokeDashoffset = offset;
-                ring.setAttribute('stroke', strokeColor);
-            }
-        }
-
-        function updateControlButtons() {
-            const primaryBtn = document.getElementById('primaryActionBtn');
-            const pauseBtn = document.getElementById('pauseBtn');
-
-            if (primaryBtn) {
-                if (appState === STATES.IDLE) {
-                    primaryBtn.innerHTML = '<span>🥄</span><span>한 입 식사 시작하기</span>';
-                } else if (appState === STATES.PAUSED) {
-                    primaryBtn.innerHTML = '<span>▶️</span><span>계속 씹기 이어하기</span>';
-                } else if (mealMode === 'manual' && appState === STATES.REST) {
-                    primaryBtn.innerHTML = '<span>🥄</span><span>다음 한 입 먹기</span>';
-                } else {
-                    primaryBtn.innerHTML = '<span>🥄</span><span>새로 한 입 먹기</span>';
-                }
-            }
-
-            if (pauseBtn) {
-                const canPause = [STATES.BITE, STATES.CHEWING, STATES.SWALLOW, STATES.REST, STATES.PAUSED].includes(appState);
-                pauseBtn.disabled = !canPause;
-                pauseBtn.innerHTML = appState === STATES.PAUSED
-                    ? '<span>▶️</span><span>재개</span>'
-                    : '<span>⏸️</span><span>일시정지</span>';
-            }
-        }
-
-        /* =========================================================================
-         * 7. 식사 사이클 엔진 (한 입 -> N번 씹기 -> 꿀꺽 -> 숨고르기)
-         * ========================================================================= */
-        function clearAllTimers() {
-            if (phaseTimeout) {
-                clearTimeout(phaseTimeout);
-                phaseTimeout = null;
-            }
-            if (chewInterval) {
-                clearInterval(chewInterval);
-                chewInterval = null;
-            }
-        }
-
-        function startMealClockIfNeeded() {
-            if (mealClockInterval) return;
-            mealClockInterval = setInterval(() => {
-                if ([STATES.BITE, STATES.CHEWING, STATES.SWALLOW, STATES.REST].includes(appState)) {
-                    stats.elapsedSeconds++;
-                    renderStats();
-                }
-            }, 1000);
-        }
-
-        function handlePrimaryAction() {
-            ensureAudioContext();
-            if (appState === STATES.PAUSED) {
-                togglePause();
-                return;
-            }
-            startNewBiteCycle();
-        }
-
-        function startNewBiteCycle() {
-            clearAllTimers();
-            startMealClockIfNeeded();
-
-            appState = STATES.BITE;
-            currentChewCount = 0;
-            stats.totalBites++;
-            saveStats();
-            renderStats();
-
-            setCharacterVisualState(STATES.BITE);
-            updateProgressRing(0, targetChews, '#FBBF24');
-            updateControlButtons();
-
-            const speech = document.getElementById('speechText');
-            if (speech) speech.textContent = '"아~ 크게 한 입! 입에 넣고 천천히 씹을 준비하세요 🥄"';
-
-            playBiteSound();
-            spawnFloatingWord('한 입 아~ 🥄', false);
-
-            phaseTimeout = setTimeout(() => {
-                startChewingPhase();
-            }, 950);
-        }
-
-        function startChewingPhase() {
-            clearAllTimers();
-            appState = STATES.CHEWING;
-            setCharacterVisualState(STATES.CHEWING);
-            updateControlButtons();
-
-            const speech = document.getElementById('speechText');
-            if (speech) speech.textContent = `"꼭꼭 씹어주세요! 목표 ${targetChews}번까지 함께 세어드릴게요 😊"`;
-
-            performSingleChewStep();
-            chewInterval = setInterval(() => {
-                if (currentChewCount < targetChews) {
-                    performSingleChewStep();
-                } else {
-                    clearInterval(chewInterval);
-                    chewInterval = null;
-                    startSwallowPhase();
-                }
-            }, chewIntervalMs);
-        }
-
-        function performSingleChewStep() {
-            if (currentChewCount >= targetChews) {
-                clearAllTimers();
-                startSwallowPhase();
-                return;
-            }
-
-            currentChewCount++;
-            stats.totalChews++;
-            saveStats();
-            renderStats();
-
-            const color = currentChewCount >= targetChews - 3 ? '#10B981' : '#FF7E5F';
-            updateProgressRing(currentChewCount, targetChews, color);
-            triggerSingleChewPulse();
-            playChewTickSound(currentChewCount, targetChews);
-
-            const word = CHEW_WORDS[(currentChewCount - 1) % CHEW_WORDS.length];
-            spawnFloatingWord(`${word} (${currentChewCount})`, false);
-
-            const speech = document.getElementById('speechText');
-            if (speech) {
-                if (currentChewCount === Math.floor(targetChews / 2)) {
-                    speech.textContent = `"절반 씹었어요! (${currentChewCount}/${targetChews}번) 아주 좋은 속도예요 👍"`;
-                } else if (currentChewCount === targetChews) {
-                    speech.textContent = `"${targetChews}번 완료! 이제 부드럽게 삼킬 준비~"`;
-                }
-            }
-
-            if (currentChewCount >= targetChews) {
-                clearAllTimers();
-                phaseTimeout = setTimeout(() => {
-                    startSwallowPhase();
-                }, Math.min(450, chewIntervalMs * 0.6));
-            }
-        }
-
-        function startSwallowPhase() {
-            clearAllTimers();
-            appState = STATES.SWALLOW;
-            setCharacterVisualState(STATES.SWALLOW);
-            updateProgressRing(targetChews, targetChews, '#10B981');
-            updateControlButtons();
-
-            const speech = document.getElementById('speechText');
-            if (speech) speech.textContent = '"꿀꺽~! 잘 씹어서 속이 정말 편안할 거예요 ✨"';
-
-            playSwallowSound();
-            spawnFloatingWord('꿀꺽~! ✨', true);
-
-            phaseTimeout = setTimeout(() => {
-                startRestPhase();
-            }, 1500);
-        }
-
-        function startRestPhase() {
-            clearAllTimers();
-            appState = STATES.REST;
-            setCharacterVisualState(STATES.REST);
-            updateControlButtons();
-
-            const speech = document.getElementById('speechText');
-            if (mealMode === 'manual') {
-                if (speech) speech.textContent = '"수동 모드예요! 다음 숟가락을 뜨실 때 [다음 한 입 먹기]나 스페이스바를 눌러주세요 🥄"';
-                return;
-            }
-
-            restCountdown = 3;
-            if (speech) speech.textContent = `"잠시 숨고르기... ${restCountdown}초 뒤에 다음 한 입 먹을게요 🍵"`;
-
-            chewInterval = setInterval(() => {
-                restCountdown--;
-                if (restCountdown > 0) {
-                    if (speech) speech.textContent = `"잠시 숨고르기... ${restCountdown}초 뒤에 다음 한 입 먹을게요 🍵"`;
-                } else {
-                    clearAllTimers();
-                    startNewBiteCycle();
-                }
-            }, 1000);
-        }
-
-        function togglePause() {
-            if (appState === STATES.IDLE) return;
-
-            const speech = document.getElementById('speechText');
-            if (appState !== STATES.PAUSED) {
-                stateBeforePause = appState;
-                clearAllTimers();
-                appState = STATES.PAUSED;
-                setCharacterVisualState(STATES.PAUSED);
-                if (speech) speech.textContent = '"잠시 멈췄어요! 물 한 모금 마시고 준비되면 이어서 씹어요 💧"';
-            } else {
-                if (stateBeforePause === STATES.CHEWING) {
-                    startChewingPhase();
-                } else if (stateBeforePause === STATES.SWALLOW) {
-                    startSwallowPhase();
-                } else if (stateBeforePause === STATES.REST) {
-                    startRestPhase();
-                } else {
-                    startNewBiteCycle();
-                }
-            }
-            updateControlButtons();
-        }
-
-        function resetCycle() {
-            clearAllTimers();
-            appState = STATES.IDLE;
-            currentChewCount = 0;
-            setCharacterVisualState(STATES.IDLE);
-            updateProgressRing(0, targetChews, '#FF7E5F');
-            updateControlButtons();
-
-            const speech = document.getElementById('speechText');
-            if (speech) {
-                speech.textContent = `"준비 완료! 시작 버튼을 누르면 한 입 먹고 ${targetChews}번 꼭꼭 세어드릴게요 🍚"`;
-            }
-        }
-
-        /* =========================================================================
-         * 8. 맞춤 설정 & 기록 로컬 저장소 관리
-         * ========================================================================= */
-        function setMealMode(mode) {
-            mealMode = mode;
-            const autoBtn = document.getElementById('modeAutoBtn');
-            const manualBtn = document.getElementById('modeManualBtn');
-            if (autoBtn) autoBtn.classList.toggle('active', mode === 'auto');
-            if (manualBtn) manualBtn.classList.toggle('active', mode === 'manual');
-            updateControlButtons();
-        }
-
-        function setTargetChews(count) {
-            targetChews = Math.min(50, Math.max(10, parseInt(count, 10) || 20));
-            const label = document.getElementById('settingChewTargetLabel');
-            if (label) label.textContent = `${targetChews}번`;
-
-            document.querySelectorAll('.preset-btn').forEach(btn => {
-                const btnVal = parseInt(btn.dataset.chews || btn.textContent, 10);
-                btn.classList.toggle('active', btnVal === targetChews);
-            });
-
-            if (appState === STATES.IDLE) {
-                updateProgressRing(0, targetChews, '#FF7E5F');
-            } else {
-                updateProgressRing(currentChewCount, targetChews, '#FF7E5F');
-            }
-        }
-
-        function adjustTargetChews(delta) {
-            setTargetChews(targetChews + delta);
-        }
-
-        function handleSpeedSliderChange(secStr) {
-            const sec = parseFloat(secStr);
-            chewIntervalMs = Math.round(sec * 1000);
-            syncAnimationDurationToSpeed();
-
-            let tempoName = '보통';
-            if (sec <= 0.55) tempoName = '빠름';
-            else if (sec >= 1.05) tempoName = '여유';
-
-            const formatted = `${sec % 1 === 0 ? sec.toFixed(1) : sec.toFixed(2).replace(/0$/, '')}초`;
-            const speedBadge = document.getElementById('speedIndicatorBadge');
-            const settingLabel = document.getElementById('settingSpeedLabel');
-            if (speedBadge) speedBadge.textContent = `${tempoName} (${formatted})`;
-            if (settingLabel) settingLabel.textContent = `${formatted} 간격`;
-
-            if (appState === STATES.CHEWING) {
-                clearInterval(chewInterval);
-                chewInterval = setInterval(() => {
-                    if (currentChewCount < targetChews) {
-                        performSingleChewStep();
-                    } else {
-                        clearInterval(chewInterval);
-                        chewInterval = null;
-                        startSwallowPhase();
-                    }
-                }, chewIntervalMs);
-            }
-        }
-
-        function cycleSideDish() {
-            sideDishIndex = (sideDishIndex + 1) % SIDE_DISHES.length;
-            const dish = SIDE_DISHES[sideDishIndex];
-            const label = document.getElementById('sideDishLabel');
-            if (label) label.textContent = `${dish.emoji} ${dish.name}`;
-            spawnFloatingWord(`${dish.emoji} ${dish.name} 냠!`, false);
-        }
-
-        function openTipModal() {
-            const modal = document.getElementById('tipModal');
-            if (modal) modal.classList.add('open');
-        }
-
-        function closeTipModal() {
-            const modal = document.getElementById('tipModal');
-            if (modal) modal.classList.remove('open');
-        }
-
-        function getTodayKey() {
-            const d = new Date();
-            return `chew_mate_stats_${d.getFullYear()}_${d.getMonth() + 1}_${d.getDate()}`;
-        }
-
-        function loadStats() {
-            try {
-                const raw = localStorage.getItem(getTodayKey());
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    stats = {
-                        totalBites: parsed.totalBites || 0,
-                        totalChews: parsed.totalChews || 0,
-                        elapsedSeconds: parsed.elapsedSeconds || 0
-                    };
-                }
-            } catch (e) {}
-            renderStats();
-        }
-
-        function saveStats() {
-            try {
-                localStorage.setItem(getTodayKey(), JSON.stringify(stats));
-            } catch (e) {}
-        }
-
-        function renderStats() {
-            const bitesEl = document.getElementById('statTotalBites');
-            const chewsEl = document.getElementById('statTotalChews');
-            const timeEl = document.getElementById('statMealTime');
-
-            if (bitesEl) bitesEl.textContent = stats.totalBites;
-            if (chewsEl) chewsEl.textContent = stats.totalChews;
-            if (timeEl) {
-                const mins = String(Math.floor(stats.elapsedSeconds / 60)).padStart(2, '0');
-                const secs = String(stats.elapsedSeconds % 60).padStart(2, '0');
-                timeEl.textContent = `${mins}:${secs}`;
-            }
-        }
-
-        function resetDailyStats() {
-            stats = { totalBites: 0, totalChews: 0, elapsedSeconds: 0 };
-            saveStats();
-            renderStats();
-            spawnFloatingWord('오늘 기록이 초기화되었어요!', false);
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON' && document.activeElement.tagName !== 'INPUT') {
-                e.preventDefault();
-                handlePrimaryAction();
-            }
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 어린이 식단 기본 데이터 (30종)
+    // ==========================================
+    const KIDS_MENUS = [
+      { name: "소고기 무국 & 밥", cat: "국물·밥", chews: 15, food: "rice" },
+      { name: "계란찜 & 김가루밥", cat: "부드러운 식단", chews: 12, food: "rice" },
+      { name: "멸치 주먹밥", cat: "한입 쏙", chews: 15, food: "rice" },
+      { name: "연어 구이 & 밥", cat: "생선 반찬", chews: 15, food: "meat" },
+      { name: "떡갈비 & 야채볶음", cat: "고기 반찬", chews: 20, food: "meat" },
+      { name: "두부 부침 & 간장밥", cat: "부드러운 식단", chews: 12, food: "rice" },
+      { name: "소고기 미역국", cat: "국물·밥", chews: 15, food: "rice" },
+      { name: "달걀말이 & 볶음밥", cat: "인기 반찬", chews: 15, food: "rice" },
+      { name: "닭안심 장조림", cat: "고기 반찬", chews: 18, food: "meat" },
+      { name: "감자채 볶음 & 밥", cat: "채소 반찬", chews: 15, food: "rice" },
+      { name: "어묵국 & 흰쌀밥", cat: "국물·밥", chews: 14, food: "rice" },
+      { name: "수제 함박스테이크", cat: "고기 반찬", chews: 20, food: "meat" },
+      { name: "시금치 나물 비빔밥", cat: "채소 도전", chews: 16, food: "rice" },
+      { name: "순두부 달걀국", cat: "부드러운 식단", chews: 12, food: "rice" },
+      { name: "카레라이스 (당근 쏙!)", cat: "한그릇 밥", chews: 15, food: "rice" },
+      { name: "짜장밥 (양파 쏙!)", cat: "한그릇 밥", chews: 15, food: "rice" },
+      { name: "잔치국수 (잘게 자른 면)", cat: "면 요리", chews: 14, food: "rice" },
+      { name: "고등어 순살 구이", cat: "생선 반찬", chews: 15, food: "meat" },
+      { name: "소고기 야채죽", cat: "유아식", chews: 10, food: "rice" },
+      { name: "불고기 덮밥", cat: "고기 반찬", chews: 18, food: "meat" },
+      { name: "브로콜리 두부무침", cat: "채소 도전", chews: 15, food: "rice" },
+      { name: "버섯 불고기", cat: "채소 도전", chews: 18, food: "meat" },
+      { name: "옥수수 콘치즈 & 밥", cat: "인기 반찬", chews: 16, food: "rice" },
+      { name: "돼지고기 안심 탕수육", cat: "특식", chews: 20, food: "meat" },
+      { name: "유부초밥", cat: "한입 쏙", chews: 15, food: "rice" },
+      { name: "치즈 오믈렛", cat: "부드러운 식단", chews: 14, food: "rice" },
+      { name: "콩나물국 & 김", cat: "국물·밥", chews: 14, food: "rice" },
+      { name: "닭고기 감자조림", cat: "고기 반찬", chews: 18, food: "meat" },
+      { name: "꼬마 김밥", cat: "한입 쏙", chews: 16, food: "rice" },
+      { name: "단호박 찜 & 닭가슴살", cat: "건강 식단", chews: 15, food: "rice" }
+    ];
+
+    const STICKER_ICONS = ["🦖", "🦄", "🚀", "👑", "🍓", "🐶", "🌈", "⭐", "🍦", "🏆"];
+
+    // ==========================================
+    // 2. 상태 변수 & LocalStorage
+    // ==========================================
+    const CUSTOM_MENU_KEY = "chewmate_kids_menus_v1";
+    const STICKER_KEY = "chewmate_kids_stickers_v1";
+
+    let customMenus = JSON.parse(localStorage.getItem(CUSTOM_MENU_KEY) || "[]");
+    let stickers = JSON.parse(localStorage.getItem(STICKER_KEY) || "[]");
+
+    let isVoiceOn = true;
+    let wakeLock = null;
+    let targetChews = 15;
+    let chewIntervalSec = 0.85;
+    let currentChews = 0;
+    let isAutoRunning = false;
+    let autoTimer = null;
+
+    // 편식 미션 상태
+    let selectedVeg = { name: "당근", icon: "🥕", type: "carrot" };
+    let isBraveBiteActive = false;
+
+    // ==========================================
+    // 3. DOM 요소 참조
+    // ==========================================
+    const characterStage = document.getElementById("character-stage");
+    const statusText = document.getElementById("status-text");
+    const currentChewEl = document.getElementById("current-chew");
+    const targetChewDisplayEl = document.getElementById("target-chew-display");
+    const progressFillEl = document.getElementById("progress-fill");
+    const autoBtn = document.getElementById("auto-btn");
+    const manualBtn = document.getElementById("manual-btn");
+    const braveBtn = document.getElementById("brave-btn");
+    const voiceToggleBtn = document.getElementById("voice-toggle");
+    const wakeToggleBtn = document.getElementById("wake-toggle");
+    const spoonFoodEl = document.getElementById("spoon-food");
+
+    // ==========================================
+    // 4. Web Audio 효과음 & Web Speech API 음성 칭찬
+    // ==========================================
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playTone(type) {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === "chew") {
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        osc.start(now);
+        osc.stop(now + 0.09);
+      } else if (type === "swallow") {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523, now);
+        osc.frequency.exponentialRampToValueAtTime(784, now + 0.22);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === "fanfare") {
+        // 편식 성공 무지개 팡파레!
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.type = "triangle";
+          o.frequency.setValueAtTime(freq, now + idx * 0.09);
+          g.gain.setValueAtTime(0.16, now + idx * 0.09);
+          g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.25);
+          o.start(now + idx * 0.09);
+          o.stop(now + idx * 0.09 + 0.25);
         });
+      }
+    }
 
-        /* =========================================================================
-         * 9. 초기화 실행
-         * ========================================================================= */
-        window.onload = function () {
-            loadStats();
-            const initialMode = detectInitialDaypart();
-            setDaypartMode(initialMode, true);
-            syncAnimationDurationToSpeed();
-            setCharacterVisualState(STATES.IDLE);
-            updateProgressRing(0, targetChews, '#FF7E5F');
-            updateControlButtons();
-        };
-    </script>
+    function speakPraise(message) {
+      if (!isVoiceOn || !("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(message);
+      utter.lang = "ko-KR";
+      utter.pitch = 1.32; // 아이들이 좋아하는 밝고 높은 톤
+      utter.rate = 1.05;
+      window.speechSynthesis.speak(utter);
+    }
+
+    voiceToggleBtn.addEventListener("click", () => {
+      isVoiceOn = !isVoiceOn;
+      voiceToggleBtn.classList.toggle("active", isVoiceOn);
+      voiceToggleBtn.textContent = isVoiceOn ? "🗣️ 음성칭찬" : "🔇 음성끔";
+      if (isVoiceOn) speakPraise("안녕! 나랑 같이 꼭꼭 씹어보자!");
+    });
+
+    wakeToggleBtn.addEventListener("click", async () => {
+      if (!("wakeLock" in navigator)) {
+        alert("이 기기에서는 화면 유지 기능을 지원하지 않아요.");
+        return;
+      }
+      try {
+        if (!wakeLock) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeToggleBtn.classList.add("active");
+        } else {
+          await wakeLock.release();
+          wakeLock = null;
+          wakeToggleBtn.classList.remove("active");
+        }
+      } catch (e) {}
+    });
+
+    // ==========================================
+    // 5. 동물 캐릭터 전환 (곰돌이 / 토끼 / 공룡)
+    // ==========================================
+    const charEarsEl = document.getElementById("char-ears");
+    const charFaceEl = document.getElementById("char-face");
+    const charNoseEl = document.getElementById("char-nose");
+
+    document.getElementById("char-tabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".char-tab");
+      if (!btn) return;
+      document.querySelectorAll(".char-tab").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const char = btn.dataset.char;
+      if (char === "rabbit") {
+        charFaceEl.setAttribute("fill", "#FFF5F7");
+        charNoseEl.setAttribute("fill", "#FF8FA3");
+        charEarsEl.innerHTML = `
+          <ellipse cx="75" cy="30" rx="11" ry="28" fill="#FFF5F7" stroke="#F3D6DF" stroke-width="2"/>
+          <ellipse cx="75" cy="32" rx="5" ry="20" fill="#FFB8C6"/>
+          <ellipse cx="135" cy="30" rx="11" ry="28" fill="#FFF5F7" stroke="#F3D6DF" stroke-width="2"/>
+          <ellipse cx="135" cy="32" rx="5" ry="20" fill="#FFB8C6"/>
+        `;
+        speakPraise("깡총깡총 토끼랑 같이 냠냠 먹자!");
+      } else if (char === "dino") {
+        charFaceEl.setAttribute("fill", "#B8E994");
+        charNoseEl.setAttribute("fill", "#38ADA9");
+        charEarsEl.innerHTML = `
+          <polygon points="105,18 93,44 117,44" fill="#78E08F"/>
+          <polygon points="78,26 68,48 88,46" fill="#78E08F"/>
+          <polygon points="132,26 122,46 142,48" fill="#78E08F"/>
+        `;
+        speakPraise("크앙! 공룡처럼 씩씩하게 씹어보자!");
+      } else {
+        charFaceEl.setAttribute("fill", "#F5CFA8");
+        charNoseEl.setAttribute("fill", "#5C4433");
+        charEarsEl.innerHTML = `
+          <circle cx="62" cy="52" r="18" fill="#E8B88A" />
+          <circle cx="62" cy="52" r="10" fill="#FFD8B8" />
+          <circle cx="148" cy="52" r="18" fill="#E8B88A" />
+          <circle cx="148" cy="52" r="10" fill="#FFD8B8" />
+        `;
+        speakPraise("안녕! 곰돌이랑 꼭꼭 씹어볼까?");
+      }
+    });
+
+    // ==========================================
+    // 6. 연령 프리셋 & 편식 미션 선택
+    // ==========================================
+    document.getElementById("preset-row").addEventListener("click", (e) => {
+      const btn = e.target.closest(".preset-btn");
+      if (!btn) return;
+      document.querySelectorAll(".preset-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      targetChews = Number(btn.dataset.chews);
+      chewIntervalSec = Number(btn.dataset.speed);
+      targetChewDisplayEl.textContent = targetChews;
+      document.documentElement.style.setProperty("--chew-speed", `${chewIntervalSec}s`);
+      currentChews = 0;
+      updateProgress();
+      if (isAutoRunning) {
+        stopAutoChew();
+        startAutoChew();
+      }
+    });
+
+    // 편식 재료 선택
+    document.getElementById("veg-chips").addEventListener("click", (e) => {
+      const chip = e.target.closest(".veg-chip");
+      if (!chip) return;
+      document.querySelectorAll(".veg-chip").forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+
+      selectedVeg = {
+        name: chip.dataset.veg,
+        icon: chip.dataset.icon,
+        type: chip.dataset.type
+      };
+      document.getElementById("selected-veg-label").textContent = `${selectedVeg.icon} ${selectedVeg.name}`;
+      braveBtn.textContent = `🌟 용감한 한 입! (${selectedVeg.name} 도전 +별 2개)`;
+    });
+
+    function updateSpoonGraphic(type) {
+      if (type === "carrot") {
+        spoonFoodEl.innerHTML = `
+          <polygon points="8,11 24,6 24,15" fill="#FF7043"/>
+          <path d="M24,10 L28,7 M24,11 L28,13" stroke="#4CAF50" stroke-width="2"/>
+        `;
+      } else if (type === "broccoli") {
+        spoonFoodEl.innerHTML = `
+          <rect x="14" y="10" width="4" height="5" fill="#81C784"/>
+          <circle cx="13" cy="8" r="4.5" fill="#2E7D32"/>
+          <circle cx="19" cy="8" r="4.5" fill="#388E3C"/>
+          <circle cx="16" cy="6" r="4.5" fill="#43A047"/>
+        `;
+      } else if (type === "onion") {
+        spoonFoodEl.innerHTML = `
+          <circle cx="16" cy="9" r="6.5" fill="#FFF9C4" stroke="#FBC02D" stroke-width="1.5"/>
+          <circle cx="16" cy="9" r="3" fill="none" stroke="#FBC02D" stroke-width="1"/>
+        `;
+      } else if (type === "spinach") {
+        spoonFoodEl.innerHTML = `
+          <ellipse cx="14" cy="9" rx="6" ry="4" fill="#43A047"/>
+          <ellipse cx="19" cy="10" rx="5" ry="3.5" fill="#66BB6A"/>
+        `;
+      } else if (type === "mushroom") {
+        spoonFoodEl.innerHTML = `
+          <rect x="14" y="9" width="4" height="5" fill="#EFEBE9"/>
+          <path d="M9,10 Q16,2 23,10 Z" fill="#8D6E63"/>
+        `;
+      } else if (type === "meat") {
+        spoonFoodEl.innerHTML = `
+          <rect x="8" y="5" width="16" height="9" rx="4" fill="#A14A2A"/>
+        `;
+      } else {
+        spoonFoodEl.innerHTML = `
+          <circle cx="16" cy="9" r="7" fill="#FFFFFF" />
+          <circle cx="14" cy="7" r="2" fill="#FF8533" />
+        `;
+      }
+    }
+
+    // ==========================================
+    // 7. 씹기 진행 & 칭찬 스티커 적립 로직
+    // ==========================================
+    function updateProgress() {
+      currentChewEl.textContent = currentChews;
+      const pct = Math.min(100, (currentChews / targetChews) * 100);
+      progressFillEl.style.width = `${pct}%`;
+    }
+
+    function addStickers(count) {
+      for (let i = 0; i < count; i++) {
+        if (stickers.length >= 10) {
+          stickers = []; // 10개 달성 후 새 판으로 자동 전환
+        }
+        const icon = STICKER_ICONS[stickers.length % STICKER_ICONS.length];
+        stickers.push(icon);
+      }
+      localStorage.setItem(STICKER_KEY, JSON.stringify(stickers));
+      renderStickerBoard();
+    }
+
+    function renderStickerBoard() {
+      const boardEl = document.getElementById("sticker-board");
+      document.getElementById("sticker-count-text").textContent = `${stickers.length} / 10개 모았어요!`;
+      let html = "";
+      for (let i = 0; i < 10; i++) {
+        if (stickers[i]) {
+          html += `<div class="sticker-slot filled">${stickers[i]}</div>`;
+        } else {
+          html += `<div class="sticker-slot" style="font-size:0.75rem; color:#C5B4A5;">${i + 1}</div>`;
+        }
+      }
+      boardEl.innerHTML = html;
+    }
+
+    document.getElementById("reset-sticker-btn").addEventListener("click", () => {
+      if (confirm("스티커판을 새로 비울까요?")) {
+        stickers = [];
+        localStorage.setItem(STICKER_KEY, JSON.stringify(stickers));
+        renderStickerBoard();
+      }
+    });
+
+    function handleOneChew() {
+      currentChews++;
+      updateProgress();
+      playTone("chew");
+
+      if (currentChews === Math.floor(targetChews / 2)) {
+        speakPraise("우와, 정말 잘 씹는다! 조금만 더 냠냠!");
+      }
+
+      if (currentChews >= targetChews) {
+        characterStage.classList.remove("is-chewing");
+
+        if (isBraveBiteActive) {
+          // 편식 재료 성공!
+          playTone("fanfare");
+          statusText.textContent = `🎉 대단해! ${selectedVeg.icon} ${selectedVeg.name} 클리어! 스티커 2개 획득!`;
+          speakPraise(`우와 최고야! 용감하게 ${selectedVeg.name}을 꼭꼭 씹어 먹었구나! 스티커 두 개 선물!`);
+          addStickers(2);
+          isBraveBiteActive = false;
+          characterStage.classList.remove("brave-mode");
+          updateSpoonGraphic("rice");
+        } else {
+          playTone("swallow");
+          statusText.textContent = "꿀꺽! 참 잘했어요 👏 스티커 1개 획득!";
+          speakPraise("꿀꺽! 아주 잘 씹었어요, 최고야!");
+          addStickers(1);
+        }
+
+        if (isAutoRunning) {
+          clearInterval(autoTimer);
+          setTimeout(() => {
+            if (!isAutoRunning) return;
+            currentChews = 0;
+            updateProgress();
+            statusText.textContent = "다음 한 입! 옴뇸뇸 냠냠...";
+            characterStage.classList.add("is-chewing");
+            autoTimer = setInterval(handleOneChew, chewIntervalSec * 1000);
+          }, 3000);
+        } else {
+          setTimeout(() => {
+            currentChews = 0;
+            updateProgress();
+            statusText.textContent = "다음 한 입도 같이 먹어볼까?";
+          }, 1500);
+        }
+      } else {
+        statusText.textContent = isBraveBiteActive
+          ? `${selectedVeg.icon} ${selectedVeg.name} 파워 충전 중! (${currentChews}/${targetChews})`
+          : `꼭꼭 씹는 중... (${currentChews}/${targetChews})`;
+      }
+    }
+
+    function startAutoChew() {
+      isAutoRunning = true;
+      autoBtn.textContent = "⏸ 잠깐 멈춤";
+      characterStage.classList.add("is-chewing");
+      statusText.textContent = "옴뇸뇸! 친구랑 같이 씹어요";
+      autoTimer = setInterval(handleOneChew, chewIntervalSec * 1000);
+    }
+
+    function stopAutoChew() {
+      isAutoRunning = false;
+      autoBtn.textContent = "▶ 같이 씹기 시작";
+      characterStage.classList.remove("is-chewing");
+      clearInterval(autoTimer);
+    }
+
+    autoBtn.addEventListener("click", () => {
+      if (isAutoRunning) stopAutoChew();
+      else startAutoChew();
+    });
+
+    manualBtn.addEventListener("click", () => {
+      if (isAutoRunning) stopAutoChew();
+      characterStage.classList.add("is-chewing");
+      handleOneChew();
+      clearTimeout(window.biteAnimTimer);
+      window.biteAnimTimer = setTimeout(() => {
+        if (!isAutoRunning) characterStage.classList.remove("is-chewing");
+      }, chewIntervalSec * 1000);
+    });
+
+    // 🌟 용감한 한 입! (편식 재료 도전)
+    braveBtn.addEventListener("click", () => {
+      isBraveBiteActive = true;
+      characterStage.classList.add("brave-mode");
+      updateSpoonGraphic(selectedVeg.type);
+      currentChews = 0;
+      updateProgress();
+      speakPraise(`우와! 용감하게 ${selectedVeg.name}에 도전하는구나! 같이 꼭꼭 씹자!`);
+
+      if (!isAutoRunning) {
+        startAutoChew();
+      }
+    });
+
+    // ==========================================
+    // 8. 어린이 반찬 룰렛 & 우리 아이 반찬 관리
+    // ==========================================
+    const openManageBtn = document.getElementById("open-manage-btn");
+    const closeManageBtn = document.getElementById("close-manage-btn");
+    const manageModal = document.getElementById("manage-modal");
+    const customMenuListEl = document.getElementById("custom-menu-list");
+    const customCountBadge = document.getElementById("custom-count-badge");
+
+    function renderCustomMenus() {
+      customCountBadge.textContent = customMenus.length;
+      if (customMenus.length === 0) {
+        customMenuListEl.innerHTML = `<div style="text-align:center; padding:16px; font-size:0.8rem; color:var(--text-sub);">아직 등록된 우리 아이 반찬이 없어요!</div>`;
+        return;
+      }
+      customMenuListEl.innerHTML = customMenus
+        .map(
+          (item) => `
+          <div class="custom-item">
+            <span><strong>⭐ ${item.name}</strong> (${item.chews}회)</span>
+            <button class="delete-btn" onclick="removeCustomMenu('${item.id}')">삭제</button>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    window.removeCustomMenu = function (id) {
+      customMenus = customMenus.filter((m) => m.id !== id);
+      localStorage.setItem(CUSTOM_MENU_KEY, JSON.stringify(customMenus));
+      renderCustomMenus();
+    };
+
+    document.getElementById("add-menu-btn").addEventListener("click", () => {
+      const nameInput = document.getElementById("new-menu-name");
+      const chewsInput = document.getElementById("new-menu-chews");
+      const name = nameInput.value.trim();
+      if (!name) return alert("반찬 이름을 입력해주세요!");
+      const chews = Math.min(40, Math.max(5, Number(chewsInput.value) || 15));
+
+      customMenus.unshift({
+        id: "km_" + Date.now(),
+        name,
+        cat: "⭐ 우리 아이 메뉴",
+        chews,
+        food: "rice"
+      });
+      localStorage.setItem(CUSTOM_MENU_KEY, JSON.stringify(customMenus));
+      nameInput.value = "";
+      renderCustomMenus();
+    });
+
+    openManageBtn.addEventListener("click", () => {
+      renderCustomMenus();
+      manageModal.classList.add("open");
+    });
+    closeManageBtn.addEventListener("click", () => manageModal.classList.remove("open"));
+
+    document.getElementById("spin-btn").addEventListener("click", () => {
+      const pool = [...customMenus, ...KIDS_MENUS];
+      let ticks = 0;
+      const interval = setInterval(() => {
+        const temp = pool[Math.floor(Math.random() * pool.length)];
+        document.getElementById("slot-menu-name").textContent = temp.name;
+        playTone("chew");
+        ticks++;
+        if (ticks >= 12) {
+          clearInterval(interval);
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          document.getElementById("slot-cat-tag").textContent = pick.cat;
+          document.getElementById("slot-menu-name").textContent = pick.name;
+          document.getElementById("slot-menu-meta").textContent = `권장 ${pick.chews}회 씹기로 자동 설정되었어요!`;
+          targetChews = pick.chews;
+          targetChewDisplayEl.textContent = targetChews;
+          updateSpoonGraphic(pick.food);
+          playTone("swallow");
+          speakPraise(`오늘은 맛있는 ${pick.name} 어때요?`);
+        }
+      }, 65);
+    });
+
+    // ==========================================
+    // 9. 부모님 전용 영역 (Parental Gate & 위치 기반 매장 찾기)
+    // ==========================================
+    const parentUnlockBtn = document.getElementById("parent-unlock-btn");
+    const parentContent = document.getElementById("parent-content");
+
+    parentUnlockBtn.addEventListener("click", () => {
+      if (parentContent.classList.contains("open")) {
+        parentContent.classList.remove("open");
+        parentUnlockBtn.textContent = "열기";
+        return;
+      }
+      const answer = prompt("부모님 확인: 3 + 4 = ? (숫자만 입력해주세요)");
+      if (answer !== null && answer.trim() === "7") {
+        parentContent.classList.add("open");
+        parentUnlockBtn.textContent = "닫기";
+      } else if (answer !== null) {
+        alert("정답이 맞지 않습니다.");
+      }
+    });
+
+    function openNearbyBabyFoodMap(provider) {
+      const statusEl = document.getElementById("location-status");
+      statusEl.textContent = "현재 위치를 확인하고 있어요...";
+
+      if (!("geolocation" in navigator)) {
+        statusEl.textContent = "위치 기능을 지원하지 않아 기본 검색으로 이동합니다.";
+        const fallbackUrl =
+          provider === "naver"
+            ? "https://map.naver.com/p/search/%EC%88%98%EC%A0%9C%20%EC%9D%B4%EC%9C%A0%EC%8B%9D%20%EC%9C%A0%EC%95%84%EB%B0%98%EC%B0%AC"
+            : "https://map.kakao.com/?q=%EC%88%98%EC%A0%9C+%EC%9D%B4%EC%9C%A0%EC%8B%9D+%EC%9C%A0%EC%95%84%EB%B0%98%EC%B0%AC";
+        window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          statusEl.textContent = `위치 확인 완료! (위도 ${latitude.toFixed(3)}, 경도 ${longitude.toFixed(3)}) 주변 매장을 엽니다.`;
+          const url =
+            provider === "naver"
+              ? `https://map.naver.com/p/search/${encodeURIComponent("수제 이유식 유아반찬")}?c=${longitude},${latitude},15,0,0,0,dh`
+              : `https://map.kakao.com/link/search/${encodeURIComponent("이유식 유아반찬")}`;
+          window.open(url, "_blank", "noopener,noreferrer");
+        },
+        () => {
+          statusEl.textContent = "위치 권한이 거부되어 통합 검색 페이지로 이동합니다.";
+          const url =
+            provider === "naver"
+              ? `https://map.naver.com/p/search/${encodeURIComponent("수제 이유식 유아반찬")}`
+              : `https://map.kakao.com/?q=${encodeURIComponent("이유식 유아반찬")}`;
+          window.open(url, "_blank", "noopener,noreferrer");
+        },
+        { timeout: 6000 }
+      );
+    }
+
+    document.getElementById("find-naver-btn").addEventListener("click", () => openNearbyBabyFoodMap("naver"));
+    document.getElementById("find-kakao-btn").addEventListener("click", () => openNearbyBabyFoodMap("kakao"));
+
+    // 초기 렌더링
+    renderStickerBoard();
+    renderCustomMenus();
+  </script>
 </body>
 </html>
